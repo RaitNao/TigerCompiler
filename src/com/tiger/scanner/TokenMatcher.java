@@ -1,8 +1,6 @@
 package com.tiger.scanner;
 
 public interface TokenMatcher {
-    boolean feedChar(char input);
+    State feedChar(char input);
     void reset();
-    boolean isInAcceptState();
-
 }

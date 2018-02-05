@@ -4,49 +4,52 @@ public class CommentMatcher implements TokenMatcher {
 
     private Character previousChar;
     private int stack = 0;
-    private boolean commentStart = true;
-    private boolean inAcceptState = false;
+    private State stateType = State.NORMAL;
+
+    private int readCounter = -1;
 
     @Override
-    public boolean feedChar(char input) {
-        if (inAcceptState == true || stack == 0 && !(input == '/' ||  (input == '*' && previousChar != null && previousChar == '/'))) {
-            inAcceptState = false;
-            return false;
+    public State feedChar(char input) {
+        readCounter++;
+        if (stateType == State.ERROR) {
+            return stateType;
         }
 
-        if (commentStart && input != '/' ||
-                previousChar != null && previousChar == '/' && input != '*') {
-            return false;
+        if (stateType == State.ACCEPTING || stack == 0 && readCounter > 1) {
+            stateType = State.ERROR;
+            return stateType;
+        }
+
+        if (readCounter == 0 && input != '/' ||
+                readCounter == 1 && previousChar != null && previousChar == '/' && input != '*') {
+            stateType = State.ERROR;
+            return stateType;
         }
 
         if (previousChar != null && previousChar == '/' && input == '*') {
             stack++;
             previousChar = null;
-            inAcceptState = false;
+            stateType = State.NORMAL;
         } else if (previousChar != null && previousChar == '*' && input == '/'){
             stack--;
             // very important detail here TODO
             previousChar = null;
             if (stack == 0) {
-                inAcceptState = true;
+                stateType = State.ACCEPTING;
             }
         } else {
             previousChar = input;
         }
 
-        commentStart = false;
-        return true;
+        return stateType;
     }
 
     @Override
     public void reset() {
         stack = 0;
         previousChar = null;
-        inAcceptState = false;
+        readCounter = -1;
+        stateType = State.NORMAL;
     }
 
-    @Override
-    public boolean isInAcceptState() {
-        return inAcceptState;
-    }
 }

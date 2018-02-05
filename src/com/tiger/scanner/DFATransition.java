@@ -16,6 +16,10 @@ public class DFATransition {
         this.targetState = targetState;
     }
 
+    public DFATransition(char symbol, int targetState) {
+        this(symbol, symbol, targetState);
+    }
+
     public void applyDFATransition(Integer[] arr){
         for (int i = rangeStart; i <= rangeEnd && i < arr.length; i++) {
             arr[i] = targetState;
