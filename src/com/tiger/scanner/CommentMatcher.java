@@ -1,10 +1,15 @@
 package com.tiger.scanner;
 
+/**
+ * For nested comment lexicon
+ */
+
 public class CommentMatcher implements TokenMatcher {
 
     private Character previousChar;
     private int stack = 0;
     private State stateType = State.NORMAL;
+    private TigerToken token;
 
     private int readCounter = -1;
 
@@ -41,6 +46,9 @@ public class CommentMatcher implements TokenMatcher {
             previousChar = input;
         }
 
+        if (stateType == State.ACCEPTING) {
+            token = new TigerToken(TokenType.COMMENT);
+        }
         return stateType;
     }
 
@@ -52,4 +60,8 @@ public class CommentMatcher implements TokenMatcher {
         stateType = State.NORMAL;
     }
 
+    @Override
+    public TigerToken getToken() {
+        return token;
+    }
 }

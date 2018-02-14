@@ -5,9 +5,12 @@ public class KeywordMatcher implements TokenMatcher {
     private int currentIndex = 0;
     private String keyword;
     private State stateType = State.NORMAL;
+    private TokenType type;
+    private TigerToken token;
 
-    public KeywordMatcher(String keyword) {
-        this.keyword = keyword;
+    public KeywordMatcher(TokenType type) {
+        this.keyword = type.getKeywordText();
+        this.type = type;
     }
 
     @Override
@@ -30,6 +33,10 @@ public class KeywordMatcher implements TokenMatcher {
             stateType = State.ERROR;
         }
 
+        if (stateType == State.ACCEPTING) {
+            token = new TigerToken(type);
+        }
+
         return stateType;
     }
 
@@ -39,4 +46,8 @@ public class KeywordMatcher implements TokenMatcher {
         stateType = State.NORMAL;
     }
 
+    @Override
+    public TigerToken getToken() {
+        return token;
+    }
 }

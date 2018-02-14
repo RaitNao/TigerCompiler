@@ -7,9 +7,17 @@ public class DFAMatcher implements TokenMatcher {
     private int currentState = 0;
     private int startState = currentState;
     private State stateType = State.NORMAL;
+    private TokenType type;
+    private TigerToken token;
+    private StringBuilder builder = new StringBuilder();
 
     private List<Integer[]> adjMatrix = new ArrayList<>();
     private List<Boolean> acceptingStates = new ArrayList<>();
+
+
+    public DFAMatcher(TokenType type) {
+        this.type = type;
+    }
 
     /**
      * TODO
@@ -33,6 +41,7 @@ public class DFAMatcher implements TokenMatcher {
         if (stateType == State.ERROR) {
             return stateType;
         }
+        builder.append(input);
 
         int nextState = adjMatrix.get(currentState)[input];
         if (nextState == -1) {
@@ -41,6 +50,10 @@ public class DFAMatcher implements TokenMatcher {
             currentState = nextState;
             stateType = acceptingStates.get(currentState) ? State.ACCEPTING : State.NORMAL;
         }
+
+        if (stateType == State.ACCEPTING) {
+            token = new TigerToken(type, builder.toString());
+        }
         return stateType;
     }
 
@@ -48,6 +61,11 @@ public class DFAMatcher implements TokenMatcher {
     public void reset() {
         currentState = startState;
         stateType = State.NORMAL;
+        builder = new StringBuilder();
     }
 
+    @Override
+    public TigerToken getToken() {
+        return token;
+    }
 }

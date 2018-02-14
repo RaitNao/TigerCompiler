@@ -10,7 +10,7 @@ public class DFATransition {
         this.rangeStart = rangeStart;
         this.rangeEnd = rangeEnd;
 
-        if (rangeEnd > rangeStart)
+        if (rangeEnd < rangeStart)
             throw new IndexOutOfBoundsException("idi nahui");
 
         this.targetState = targetState;
