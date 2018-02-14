@@ -17,11 +17,14 @@ public class Main {
         try {
             Reader reader = new FileReader(new File(args[0]));
             TigerScanner sc = new TigerScanner(reader);
+            boolean firstRun = true;
             for (TigerToken[] token: sc) {
-                System.out.print(token[0]);
-                if (sc.iterator().hasNext()) {
+                if (firstRun) {
+                    firstRun = false;
+                } else {
                     System.out.print(" ");
                 }
+                System.out.print(token[0]);
             }
         } catch (Exception e) {
             e.printStackTrace();
