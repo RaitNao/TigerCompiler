@@ -19,11 +19,6 @@ public class DFAMatcher implements TokenMatcher {
         this.type = type;
     }
 
-    /**
-     * TODO
-     * @param transitions
-     * @param isAccepting
-     */
     public void addState(DFATransition[] transitions, boolean isAccepting) {
         Integer[] nextStates = new Integer[Character.MAX_VALUE + 1];
         for (int i = 0; i < nextStates.length; i++) {

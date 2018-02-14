@@ -37,7 +37,6 @@ public class CommentMatcher implements TokenMatcher {
             stateType = State.NORMAL;
         } else if (previousChar != null && previousChar == '*' && input == '/'){
             stack--;
-            // very important detail here TODO
             previousChar = null;
             if (stack == 0) {
                 stateType = State.ACCEPTING;
