@@ -1,0 +1,1 @@
+let var A:id : float ; var u:id : unit ; in A:id := 1.5:floatlit ; u:id := printf:id ( A:id ) ; end

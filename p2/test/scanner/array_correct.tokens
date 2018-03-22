@@ -1,0 +1,1 @@
+let type ArrayInt:id := array [ 100:intlit ] of int ; var X:id , Y:id : ArrayInt:id := 10:intlit ; var i:id , sum:id : int := 0:intlit ; var u:id : unit ; in for i:id := 1:intlit to 100:intlit do sum:id := sum:id + X:id [ i:id ] * Y:id [ i:id ] ; enddo ; u:id := printi:id ( sum:id ) ; end
