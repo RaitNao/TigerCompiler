@@ -6,7 +6,6 @@ import com.tiger.scanner.TokenType;
 import com.tiger.scanner.TigerToken;
 
 public class LLTable {
-    private static final Map<TigerNT, Map<TokenType, TigerProduction>> map = createMap();
 
     private static final TigerProduction[] productions = {
         new TigerProduction(new TigerNT("program"), new TigerToken(TokenType.LET), new TigerNT("declseg"), new TigerToken(TokenType.IN), new TigerNT("stmts"), new TigerToken(TokenType.END)),
@@ -94,6 +93,8 @@ public class LLTable {
         new TigerProduction(new TigerNT("aexpr", NTType.LR), new TigerNT("linop"), new TigerNT("term"), new TigerNT("aexpr", NTType.LR)),
         new TigerProduction(new TigerNT("aexpr", NTType.LR), new TigerToken(TokenType. EPSILON))
 	};
+
+    private static final Map<TigerNT, Map<TokenType, TigerProduction>> map = createMap();
 
     private static Map<TigerNT, Map<TokenType, TigerProduction>> createMap() {
         Map<TigerNT, Map<TokenType, TigerProduction>> map = new HashMap<>();
@@ -510,7 +511,10 @@ public class LLTable {
         return map;
     }
 
-    public TigerProduction getProduction(TigerNT NT, TigerToken token) {
+    public static final TigerNT startSymbol = new TigerNT("program");
+    public static final TigerToken EOF = new TigerToken(TokenType.EOF);
+
+    public static TigerProduction getProduction(TigerNT NT, TigerToken token) {
     	Map<TokenType, TigerProduction> byNT = map.get(NT);
     	if (byNT == null) {
 			return null;

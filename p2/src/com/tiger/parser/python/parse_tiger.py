@@ -392,11 +392,12 @@ import com.tiger.scanner.TokenType;
 import com.tiger.scanner.TigerToken;
 
 public class LLTable {{
-    private static final Map<TigerNT, Map<TokenType, TigerProduction>> map = createMap();
 
     private static final TigerProduction[] productions = {{
         {}
 	}};
+
+    private static final Map<TigerNT, Map<TokenType, TigerProduction>> map = createMap();
 
     private static Map<TigerNT, Map<TokenType, TigerProduction>> createMap() {{
         Map<TigerNT, Map<TokenType, TigerProduction>> map = new HashMap<>();""".format(",\n        ".join(productions))]
@@ -417,7 +418,10 @@ public class LLTable {{
         code.append("""\n        return map;\n    }\n""")
 
         code.append("""
-    public TigerProduction getProduction(TigerNT NT, TigerToken token) {
+    public static final TigerNT startSymbol = new TigerNT("program");
+    public static final TigerToken EOF = new TigerToken(TokenType.EOF);
+
+    public static TigerProduction getProduction(TigerNT NT, TigerToken token) {
     	Map<TokenType, TigerProduction> byNT = map.get(NT);
     	if (byNT == null) {
 			return null;
