@@ -16,6 +16,10 @@ public class TigerNT implements TigerSymbol {
         this(value, NTType.NORMAL);
     }
 
+    public NTType getType() {
+        return type;
+    }
+
     @Override
     public String strValue() {
         return value;

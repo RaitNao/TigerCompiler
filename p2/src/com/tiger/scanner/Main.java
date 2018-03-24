@@ -11,7 +11,6 @@ import java.util.Arrays;
 public class Main {
 
     public static void main(String[] args) {
-	// write your code here
         if (args.length == 0) {
             System.err.println("Specify .tgr file");
             System.exit(1);
@@ -52,6 +51,7 @@ public class Main {
 
     private static void runParser(Reader reader) throws ParseException {
         TigerAST tree = new TigerAST();
-        tree.parse(reader);
+        String output = tree.parse(reader);
+        System.out.print(output);
     }
 }

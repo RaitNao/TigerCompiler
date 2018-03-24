@@ -1,6 +1,7 @@
 package com.tiger.syntax;
 
 import com.tiger.parser.LLTable;
+import com.tiger.parser.NTType;
 import com.tiger.parser.TigerNT;
 import com.tiger.parser.TigerProduction;
 import com.tiger.scanner.TigerScanner;
@@ -47,12 +48,33 @@ public class TigerAST {
 
         @Override
         public String toString() {
-            StringBuilder builder = new StringBuilder("(" + symbol.strValue());
-            for (Node child : children) {
-                builder.append(" " + child.toString());
+            if (children.size() == 1 && children.get(0) instanceof TNode && ((TNode) children.get(0)).symbol.getType() == TokenType.EPSILON) {
+                return symbol.strValue() + getSpecialType();
             }
 
+            StringBuilder builder = new StringBuilder("(" + symbol.strValue());
+            builder.append(getSpecialType());
+
+            for (Node child : children) {
+                if (child.toString() != null) {
+                    builder.append(" " + child.toString());
+                }
+            }
+            builder.append(")");
+
             return builder.toString();
+        }
+
+        private String getSpecialType() {
+            if (this instanceof NTNode) {
+                NTType type = ((NTNode) this).symbol.getType();
+                if (type == NTType.LF) {
+                    return "_lf";
+                } else if (type == NTType.LR) {
+                    return "'";
+                }
+            }
+            return "";
         }
     }
 
@@ -98,7 +120,7 @@ public class TigerAST {
 
     private Stack<TigerSymbol> stack = null;
 
-    public void parse(Reader reader) throws ParseException {
+    public String parse(Reader reader) throws ParseException {
         TigerScanner sc = new TigerScanner(reader);
         Iterator<TigerToken[]> iter = sc.iterator();
         stack = new Stack<>();
@@ -118,15 +140,28 @@ public class TigerAST {
                     top = stack.pop();
                     token = iter.next();
                 } else {
-                    throw new ParseException("Error Top of Stack Terminal not matching", -1);
-                }
+                    // Case for Tokens that are IDs, INTLITS, FLOATLITS
+                    // Because the Top Of Stack doesn't have actual value of those
+                    TokenType topType = ((TigerToken) top).getType();
+                    if (topType == token[0].getType() && topType == TokenType.IDENTIFIER || topType == TokenType.INTLIT || topType == TokenType.FLOATLIT) {
+                        addSymbol(token[0]);
 
+                        top = stack.pop();
+                        token = iter.next();
+                    } else if (topType == TokenType.EPSILON) {
+                        // If Epsilon Node was on stack, just pop it + add to Syntax Tree
+                        addSymbol((TigerToken) top);
+                        top = stack.pop();
+                    } else {
+                        throw new ParseException("Error Top of Stack Terminal not matching", -1);
+                    }
+                }
             } else if (top instanceof TigerNT){
                 TigerProduction prod = LLTable.getProduction(((TigerNT) top), token[0]);
                 if (prod != null) {
                     addSymbol((TigerNT) top, prod.getSymbols().length);
-
                     for (int i = prod.getSymbols().length - 1; i >= 0; i--) {
+                        TigerSymbol symbol = prod.getSymbols()[i];
                         stack.push(prod.getSymbols()[i]);
                     }
                     top = stack.pop();
@@ -134,8 +169,8 @@ public class TigerAST {
                     throw new ParseException("Error expanding Top of Stack Non-Terminal", -1);
                 }
             }
-            System.out.print(" " + top.strValue());
         }
+        return root.toString();
     }
 
 }
