@@ -92,7 +92,7 @@ public class LLTable {
         new TigerProduction(new TigerNT("stmt", NTType.LF), new TigerToken(TokenType.ELSE), new TigerNT("stmts"), new TigerToken(TokenType.ENDIF)),
         new TigerProduction(new TigerNT("aexpr", NTType.LR), new TigerNT("linop"), new TigerNT("term"), new TigerNT("aexpr", NTType.LR)),
         new TigerProduction(new TigerNT("aexpr", NTType.LR), new TigerToken(TokenType. EPSILON))
-	};
+        };
 
     private static final Map<TigerNT, Map<TokenType, TigerProduction>> map = createMap();
 
@@ -419,12 +419,15 @@ public class LLTable {
         });
         map.put(new TigerNT("declseg"), new HashMap<TokenType, TigerProduction>() {
             {
+                put(TokenType.VAR, productions[1]);
                 put(TokenType.BOOLEAN, productions[1]);
+                put(TokenType.FUNC, productions[1]);
+                put(TokenType.IN, productions[1]);
                 put(TokenType.INT, productions[1]);
                 put(TokenType.FLOAT, productions[1]);
                 put(TokenType.ARRAY, productions[1]);
-                put(TokenType.IDENTIFIER, productions[1]);
                 put(TokenType.UNIT, productions[1]);
+                put(TokenType.IDENTIFIER, productions[1]);
             }
         });
         map.put(new TigerNT("aexpr", NTType.LR), new HashMap<TokenType, TigerProduction>() {
@@ -515,8 +518,8 @@ public class LLTable {
     public static final TigerToken EOF = new TigerToken(TokenType.EOF);
 
     public static TigerProduction getProduction(TigerNT NT, TigerToken token) {
-    	Map<TokenType, TigerProduction> byNT = map.get(NT);
-    	if (byNT == null) {
+        Map<TokenType, TigerProduction> byNT = map.get(NT);
+        if (byNT == null) {
 			return null;
 		}
 

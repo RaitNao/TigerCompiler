@@ -172,7 +172,7 @@ def main():
             rule_pairs.append((rule, count))
             count += 1
         G_final[NT] = rule_pairs
-        
+
     for NT in G_final:
         if NT[-1] == "'" or NT[-3:] == "_lf":
             rule_pairs = []
@@ -305,7 +305,10 @@ class LLGrammar(object):
                     self.first_plus[NT].append( (rule_pair[1], set(EPSILON_SET | self.follow[NT])) )
                 else:
                     derivation = rule_pair[0].split()
-                    self.first_plus[NT].append( (rule_pair[1], set(self.first[derivation[0]])) )
+                    if EPSILON in self.first[derivation[0]]:
+                        self.first_plus[NT].append( (rule_pair[1], set(self.first[derivation[0]]) | set(self.follow[derivation[0]])) )
+                    else:
+                        self.first_plus[NT].append( (rule_pair[1], set(self.first[derivation[0]])) )
 
 
 
@@ -352,8 +355,8 @@ class LLGrammar(object):
         with open("terminals_to_enum.csv", 'r') as f:
             csvreader = csv.reader(f)
             translation = {el[0]: el[1] for el in csvreader}
-    
-    
+
+
         productions = []
         for NT in text_order:
             NT_name = actual_name(NT)
@@ -363,19 +366,19 @@ class LLGrammar(object):
                 production += ", ".join([actual_name(el) if el in self.G else "new TigerToken(TokenType.{})".format(translation[el]) for el in rule_pair[0].split()])
                 production += ")"
                 productions.append(production)
-        
+
         for NT in self.G:
             if NT[-1] == "'" or NT[-3:] == "_lf":
                 NT_name = actual_name(NT)
-                
+
                 for rule_pair in self.G[NT]:
-                    production = "new TigerProduction({}, ".format(NT_name)            
+                    production = "new TigerProduction({}, ".format(NT_name)
                     production += ", ".join([actual_name(el) if el in self.G else "new TigerToken(TokenType.{})".format(translation[el]) for el in rule_pair[0].split()])
                     production += ")"
                     productions.append(production)
-    
-    
-    
+
+
+
         if path.rfind('/') != -1:
             directory = path[:path.rfind('/')]
             if not os.path.isdir(directory):
@@ -395,13 +398,13 @@ public class LLTable {{
 
     private static final TigerProduction[] productions = {{
         {}
-	}};
+        }};
 
     private static final Map<TigerNT, Map<TokenType, TigerProduction>> map = createMap();
 
     private static Map<TigerNT, Map<TokenType, TigerProduction>> createMap() {{
         Map<TigerNT, Map<TokenType, TigerProduction>> map = new HashMap<>();""".format(",\n        ".join(productions))]
-        
+
         for NT in self.ll_table:
             NT_name = actual_name(NT)
             map_entry = ["""\n        map.put({}, new HashMap<TokenType, TigerProduction>() {{\n            {{""".format(NT_name)]
@@ -422,14 +425,14 @@ public class LLTable {{
     public static final TigerToken EOF = new TigerToken(TokenType.EOF);
 
     public static TigerProduction getProduction(TigerNT NT, TigerToken token) {
-    	Map<TokenType, TigerProduction> byNT = map.get(NT);
-    	if (byNT == null) {
+        Map<TokenType, TigerProduction> byNT = map.get(NT);
+        if (byNT == null) {
 			return null;
 		}
 
 		return byNT.get(token.getType());
 	}\n}\n""")
-        
+
         with open(path, 'w') as f:
             f.writelines(code)
 
