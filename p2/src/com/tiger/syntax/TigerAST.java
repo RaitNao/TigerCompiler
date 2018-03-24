@@ -66,13 +66,11 @@ public class TigerAST {
         }
 
         private String getSpecialType() {
-            if (this instanceof NTNode) {
-                NTType type = ((NTNode) this).symbol.getType();
-                if (type == NTType.LF) {
-                    return "_lf";
-                } else if (type == NTType.LR) {
-                    return "'";
-                }
+            NTType type = symbol.getType();
+            if (type == NTType.LF) {
+                return "_lf";
+            } else if (type == NTType.LR) {
+                return "'";
             }
             return "";
         }
@@ -127,30 +125,22 @@ public class TigerAST {
         TigerToken[] token = iter.next();
 
         stack.push(LLTable.EOF);
-        stack.push(LLTable.startSymbol);
 
-        TigerSymbol top = stack.pop();
+        TigerSymbol top = LLTable.startSymbol;
         while (iter.hasNext()) {
             if (top instanceof TigerToken && ((TigerToken) top).getType() == TokenType.EOF) {
                 break;
             } else if (top instanceof TigerToken) {
-                if (token[0].equals(top)) {
-                    addSymbol((TigerToken) top);
+                TigerToken topToken = (TigerToken) top;
+                if (token[0].getType() == topToken.getType()) {
+                    addSymbol(token[0]);
 
                     top = stack.pop();
                     token = iter.next();
                 } else {
-                    // Case for Tokens that are IDs, INTLITS, FLOATLITS
-                    // Because the Top Of Stack doesn't have actual value of those
-                    TokenType topType = ((TigerToken) top).getType();
-                    if (topType == token[0].getType() && topType == TokenType.IDENTIFIER || topType == TokenType.INTLIT || topType == TokenType.FLOATLIT) {
-                        addSymbol(token[0]);
-
-                        top = stack.pop();
-                        token = iter.next();
-                    } else if (topType == TokenType.EPSILON) {
-                        // If Epsilon Node was on stack, just pop it + add to Syntax Tree
-                        addSymbol((TigerToken) top);
+                    // If Epsilon Node was on stack, just pop it + add to Syntax Tree
+                    if (topToken.getType() == TokenType.EPSILON) {
+                        addSymbol(topToken);
                         top = stack.pop();
                     } else {
                         throw new ParseException("Error Top of Stack Terminal not matching", -1);
@@ -161,7 +151,6 @@ public class TigerAST {
                 if (prod != null) {
                     addSymbol((TigerNT) top, prod.getSymbols().length);
                     for (int i = prod.getSymbols().length - 1; i >= 0; i--) {
-                        TigerSymbol symbol = prod.getSymbols()[i];
                         stack.push(prod.getSymbols()[i]);
                     }
                     top = stack.pop();
