@@ -1,19 +1,13 @@
 package com.tiger.syntax;
 
-import com.tiger.parser.LLTable;
 import com.tiger.parser.NTType;
 import com.tiger.parser.TigerNT;
-import com.tiger.parser.TigerProduction;
-import com.tiger.scanner.TigerScanner;
 import com.tiger.scanner.TigerToken;
 import com.tiger.scanner.TokenType;
 
-import java.io.Reader;
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Stack;
 
 public class TigerAST {
     private abstract class Node {
@@ -39,7 +33,7 @@ public class TigerAST {
         TigerNT symbol;
         int expectedNumCh;
 
-        public NTNode(NTNode parent, TigerNT symbol, int expectedNumCh) {
+        NTNode(NTNode parent, TigerNT symbol, int expectedNumCh) {
             this.parent = parent;
             this.symbol = symbol;
             this.expectedNumCh = expectedNumCh;
@@ -57,7 +51,7 @@ public class TigerAST {
 
             for (Node child : children) {
                 if (child.toString() != null) {
-                    builder.append(" " + child.toString());
+                    builder.append(" ").append(child.toString());
                 }
             }
             builder.append(")");
@@ -114,52 +108,40 @@ public class TigerAST {
         }
     }
 
-    /* ################################################################################################################### */
+    public void revertLeftFactoring() {
+        revertLeftFactoring(root);
+    }
 
-    private Stack<TigerSymbol> stack = null;
+    private boolean revertLeftFactoring(NTNode curr) {
+        Node child;
+        for (int i = 0; i < curr.children.size(); i++) {
+            child = curr.children.get(i);
+            if (child instanceof NTNode) {
+                NTNode childNT = (NTNode) child;
+                if (revertLeftFactoring(childNT)) {
+                    childNT.children.forEach(grandchild -> grandchild.parent = curr);
+                    curr.children.remove(i);
+                    curr.children.addAll(i, childNT.children);
+                    curr.expectedNumCh = curr.children.size();
 
-    public String parse(Reader reader) throws ParseException {
-        TigerScanner sc = new TigerScanner(reader);
-        Iterator<TigerToken[]> iter = sc.iterator();
-        stack = new Stack<>();
-        TigerToken[] token = iter.next();
-
-        stack.push(LLTable.EOF);
-
-        TigerSymbol top = LLTable.startSymbol;
-        while (iter.hasNext()) {
-            if (top instanceof TigerToken && ((TigerToken) top).getType() == TokenType.EOF) {
-                break;
-            } else if (top instanceof TigerToken) {
-                TigerToken topToken = (TigerToken) top;
-                if (token[0].getType() == topToken.getType()) {
-                    addSymbol(token[0]);
-
-                    top = stack.pop();
-                    token = iter.next();
-                } else {
-                    // If Epsilon Node was on stack, just pop it + add to Syntax Tree
-                    if (topToken.getType() == TokenType.EPSILON) {
-                        addSymbol(topToken);
-                        top = stack.pop();
-                    } else {
-                        throw new ParseException("Error Top of Stack Terminal not matching", -1);
-                    }
-                }
-            } else if (top instanceof TigerNT){
-                TigerProduction prod = LLTable.getProduction(((TigerNT) top), token[0]);
-                if (prod != null) {
-                    addSymbol((TigerNT) top, prod.getSymbols().length);
-                    for (int i = prod.getSymbols().length - 1; i >= 0; i--) {
-                        stack.push(prod.getSymbols()[i]);
-                    }
-                    top = stack.pop();
-                } else {
-                    throw new ParseException("Error expanding Top of Stack Non-Terminal", -1);
+                    // Make sure for loop goes through first "new" child
+                    i--;
                 }
             }
         }
-        return root.toString();
+
+        if (curr.symbol.getType() == NTType.LF) {
+            if (curr.parent.symbol.strValue().equals(curr.symbol.strValue())) {
+                return true;
+            }
+        }
+        return false;
     }
 
+    /* ################################################################################################################### */
+
+    @Override
+    public String toString() {
+        return root.toString();
+    }
 }

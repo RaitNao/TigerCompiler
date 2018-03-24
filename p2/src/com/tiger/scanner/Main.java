@@ -1,5 +1,6 @@
 package com.tiger.scanner;
 
+import com.tiger.parser.TigerParser;
 import com.tiger.syntax.TigerAST;
 
 import java.io.File;
@@ -51,7 +52,12 @@ public class Main {
 
     private static void runParser(Reader reader) throws ParseException {
         TigerAST tree = new TigerAST();
-        String output = tree.parse(reader);
-        System.out.print(output);
+        TigerParser.parse(reader, tree);
+        System.out.print(tree);
+
+        System.out.println("\nHAHAHAHA");
+        tree.revertLeftFactoring();
+        System.out.print(tree);
+
     }
 }
