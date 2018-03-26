@@ -46,16 +46,20 @@ public class TigerAST {
 
         @Override
         public String toString() {
-            if (children.size() == 1 && children.get(0) instanceof TNode && ((TNode) children.get(0)).symbol.getType() == TokenType.EPSILON) {
-                return symbol.strValue() + getSpecialType();
+            if (children.size() == 1
+                    && children.get(0) instanceof TNode
+                    && ((TNode) children.get(0)).symbol.getType() == TokenType.EPSILON) {
+                return symbol.strValue()/* + getSpecialType()*/;
             }
 
             StringBuilder builder = new StringBuilder("(" + symbol.strValue());
-            builder.append(getSpecialType());
+            //builder.append(getSpecialType());
 
             for (Node child : children) {
-                if (child.toString() != null) {
-                    builder.append(" ").append(child.toString());
+                String chStr = child.toString();
+
+                if (chStr != null) {
+                    builder.append(" ").append(chStr);
                 }
             }
             builder.append(")");
@@ -63,7 +67,7 @@ public class TigerAST {
             return builder.toString();
         }
 
-        private String getSpecialType() {
+        /*private String getSpecialType() {
             NTType type = symbol.getType();
             if (type == NTType.LF) {
                 return "_lf";
@@ -71,7 +75,7 @@ public class TigerAST {
                 return "'";
             }
             return "";
-        }
+        }*/
     }
 
     /* ################################################################################################################### */
