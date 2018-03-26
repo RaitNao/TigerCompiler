@@ -202,8 +202,6 @@ def main():
 
 
 
-
-
 def topsort(G, curr, visited, stack):
     visited.add(curr)
     for rule in G[curr]:
@@ -235,12 +233,11 @@ class LLGrammar(object):
 
     def _build_first(self):
 
-        for T in self.terminals:
-            self.first[T] = {T}
-
         for NT in self.G:
             self.first[NT] = set()
 
+        for T in self.terminals:
+            self.first[T] = {T}
 
         changed = True
         while changed:
@@ -256,12 +253,14 @@ class LLGrammar(object):
                     derivation = rule_pair[0].split()
                     if not set(self.first[derivation[0]] - EPSILON_SET).issubset(self.first[NT]):
                         changed = True
+
                     self.first[NT].update(self.first[derivation[0]] - EPSILON_SET)
 
                     ind = 0
                     while ind < len(derivation) - 1 and EPSILON in self.first[derivation[ind]]:
                         if not set(self.first[derivation[ind]] - EPSILON_SET).issubset(self.first[NT]):
                             changed = True
+
                         self.first[NT].update(self.first[derivation[ind + 1]] - EPSILON_SET)
                         ind += 1
 
@@ -269,6 +268,8 @@ class LLGrammar(object):
                         if not EPSILON_SET.issubset(self.first[NT]):
                             changed = True
                         self.first[NT].update(EPSILON_SET)
+        self.first["typedecl"] = {"type"}
+
 
     def _build_follow(self):
         for NT in self.G:
@@ -363,7 +364,7 @@ class LLGrammar(object):
 
             for rule_pair in self.G[NT]:
                 production = "new TigerProduction({}, ".format(NT_name)
-                production += ", ".join([actual_name(el) if el in self.G else "new TigerToken(TokenType.{})".format(translation[el]) for el in rule_pair[0].split()])
+                production += ", ".join([actual_name(el) if el in self.G and not (NT == "typedecl" and ind == 0) else "new TigerToken(TokenType.{})".format(translation[el]) for ind, el in enumerate(rule_pair[0].split())])
                 production += ")"
                 productions.append(production)
 

@@ -15,6 +15,9 @@ public class Main {
         if (args.length == 0) {
             System.err.println("Specify .tgr file");
             System.exit(1);
+        } else if (args.length ==1) {
+            System.err.println("Specify complier output");
+            System.exit(1);
         } else {
             try {
                 Reader reader = new FileReader(new File(args[0]));
@@ -53,11 +56,10 @@ public class Main {
     private static void runParser(Reader reader) throws ParseException {
         TigerAST tree = new TigerAST();
         TigerParser.parse(reader, tree);
-        System.out.print(tree);
 
-        System.out.println("\nHAHAHAHA");
         tree.revertLeftFactoring();
-        System.out.print(tree);
+        tree.revertLeftRecursion();
 
+        System.out.print(tree);
     }
 }

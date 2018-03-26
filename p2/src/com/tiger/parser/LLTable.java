@@ -12,7 +12,7 @@ public class LLTable {
         new TigerProduction(new TigerNT("declseg"), new TigerNT("typedecls"), new TigerNT("vardecls"), new TigerNT("funcdecls")),
         new TigerProduction(new TigerNT("typedecls"), new TigerToken(TokenType. EPSILON)),
         new TigerProduction(new TigerNT("typedecls"), new TigerNT("typedecl"), new TigerNT("typedecls")),
-        new TigerProduction(new TigerNT("typedecl"), new TigerNT("type"), new TigerToken(TokenType.IDENTIFIER), new TigerToken(TokenType.ASSIGN), new TigerNT("type"), new TigerToken(TokenType.SEMICOLON)),
+        new TigerProduction(new TigerNT("typedecl"), new TigerToken(TokenType.TYPE), new TigerToken(TokenType.IDENTIFIER), new TigerToken(TokenType.ASSIGN), new TigerNT("type"), new TigerToken(TokenType.SEMICOLON)),
         new TigerProduction(new TigerNT("type"), new TigerToken(TokenType.BOOLEAN)),
         new TigerProduction(new TigerNT("type"), new TigerToken(TokenType.INT)),
         new TigerProduction(new TigerNT("type"), new TigerToken(TokenType.FLOAT)),
@@ -128,6 +128,7 @@ public class LLTable {
                 put(TokenType.INT, productions[4]);
                 put(TokenType.ARRAY, productions[4]);
                 put(TokenType.FLOAT, productions[4]);
+                put(TokenType.TYPE, productions[4]);
                 put(TokenType.IDENTIFIER, productions[4]);
                 put(TokenType.UNIT, productions[4]);
             }
@@ -398,12 +399,7 @@ public class LLTable {
                 put(TokenType.VAR, productions[2]);
                 put(TokenType.FUNC, productions[2]);
                 put(TokenType.IN, productions[2]);
-                put(TokenType.BOOLEAN, productions[3]);
-                put(TokenType.INT, productions[3]);
-                put(TokenType.ARRAY, productions[3]);
-                put(TokenType.FLOAT, productions[3]);
-                put(TokenType.IDENTIFIER, productions[3]);
-                put(TokenType.UNIT, productions[3]);
+                put(TokenType.TYPE, productions[3]);
             }
         });
         map.put(new TigerNT("term"), new HashMap<TokenType, TigerProduction>() {
@@ -419,15 +415,16 @@ public class LLTable {
         });
         map.put(new TigerNT("declseg"), new HashMap<TokenType, TigerProduction>() {
             {
-                put(TokenType.VAR, productions[1]);
+                put(TokenType.INT, productions[1]);
+                put(TokenType.FLOAT, productions[1]);
+                put(TokenType.IDENTIFIER, productions[1]);
                 put(TokenType.BOOLEAN, productions[1]);
                 put(TokenType.FUNC, productions[1]);
                 put(TokenType.IN, productions[1]);
-                put(TokenType.INT, productions[1]);
-                put(TokenType.FLOAT, productions[1]);
+                put(TokenType.VAR, productions[1]);
                 put(TokenType.ARRAY, productions[1]);
+                put(TokenType.TYPE, productions[1]);
                 put(TokenType.UNIT, productions[1]);
-                put(TokenType.IDENTIFIER, productions[1]);
             }
         });
         map.put(new TigerNT("aexpr", NTType.LR), new HashMap<TokenType, TigerProduction>() {
