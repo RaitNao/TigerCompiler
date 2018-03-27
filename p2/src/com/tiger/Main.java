@@ -1,12 +1,15 @@
-package com.tiger.scanner;
+package com.tiger;
 
 import com.tiger.parser.TigerParser;
+import com.tiger.scanner.TigerScanner;
+import com.tiger.scanner.TigerToken;
+import com.tiger.scanner.TokenType;
 import com.tiger.syntax.TigerAST;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.Reader;
-import java.text.ParseException;
 import java.util.Arrays;
 
 public class Main {
@@ -16,18 +19,16 @@ public class Main {
             System.err.println("Specify .tgr file");
             System.exit(1);
         } else if (args.length ==1) {
-            System.err.println("Specify complier output");
+            System.err.println("Specify compiler output");
             System.exit(1);
         } else {
             try {
-                Reader reader = new FileReader(new File(args[0]));
-
                 if (Arrays.asList(args).contains("--tokens")) {
-                    runScanner(reader);
+                    runScanner(args[0]);
                 }
 
                 if (Arrays.asList(args).contains("--ast")) {
-                    runParser(reader);
+                    runParser(args[0]);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -37,7 +38,8 @@ public class Main {
 
     }
 
-    private static void runScanner(Reader reader) throws ParseException {
+    private static void runScanner(String filename) throws FileNotFoundException {
+        Reader reader = new FileReader(new File(filename));
         TigerScanner sc = new TigerScanner(reader);
         boolean firstRun = true;
         for (TigerToken[] token : sc) {
@@ -53,7 +55,9 @@ public class Main {
         }
     }
 
-    private static void runParser(Reader reader) throws ParseException {
+    private static void runParser(String filename) throws FileNotFoundException {
+        Reader reader = new FileReader(new File(filename));
+
         TigerAST tree = new TigerAST();
         TigerParser.parse(reader, tree);
 

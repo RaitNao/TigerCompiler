@@ -96,11 +96,5 @@ crashlytics.properties
 crashlytics-build.properties
 fabric.properties
 
-/src/META-INF/
-/p1/.idea/
-/p1/out/
-/p1/TigerCompiler.iml
-/p1/p1.iml
-/p1/src/META-INF/
-/p2/src/META-INF/
-/p2/src/META-INF/MANIFEST.MF
+p2/grades.sh
+!*compiler.jar
