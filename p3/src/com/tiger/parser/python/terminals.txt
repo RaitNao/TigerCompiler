@@ -1,0 +1,1 @@
+array,begin,boolean,break,do,else,end,enddo,endif,false,float,for,func,if,in,int,let,of,return,then,to,true,type,unit,var,while,",",:,;,(,),[,],{,},.,+,-,*,/,=,<>,<,>,<=,>=,&,|,:=,intlit,floatlit,id,_,eof
