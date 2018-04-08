@@ -5,12 +5,12 @@ import com.tiger.scanner.TigerScanner;
 import com.tiger.scanner.TigerToken;
 import com.tiger.scanner.TokenType;
 import com.tiger.syntax.TigerAST;
+import com.tiger.type.TypeChecker;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.Reader;
-import java.text.ParseException;
 import java.util.Arrays;
 
 public class Main {
@@ -28,7 +28,8 @@ public class Main {
 
                 tree.revertLeftFactoring();
                 tree.revertLeftRecursion();
-                boolean isWellType = tree.isWellTyped();
+                TypeChecker checker = new TypeChecker(tree.getRoot());
+                boolean isWellType = checker.isWellTyped();
                 if (!isWellType) {
                     System.err.println("Type Check Error in " + args[0]);
                     System.exit(1);
