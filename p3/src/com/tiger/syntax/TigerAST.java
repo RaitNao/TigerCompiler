@@ -148,9 +148,11 @@ public class TigerAST {
             child = curr.childAt(i);
             if (child.isNT()) {
                 if (revertLeftFactoring(child)) {
-                    child.children.forEach(grandchild -> grandchild.parent = curr);
+                    child.children.forEach(grandchild ->grandchild.parent = curr);
                     curr.children.remove(i);
-                    curr.children.addAll(i, child.children);
+                    if (child.childAt(0).isNT() || child.childAt(0).getTerminalType() != TokenType.EPSILON) {
+                        curr.children.addAll(i, child.children);
+                    }
                     curr.expectedNumCh -= (child.children.size() - 1);
 
                     // Make sure for loop goes through first "new" child
@@ -226,6 +228,19 @@ public class TigerAST {
 
     /* ################################################################################################################### */
 
+    private class MayReturn {
+        TigerType type;
+        boolean isMustReturn;
+
+        MayReturn(TigerType type, boolean isMustReturn) {
+            this.type = type;
+            this.isMustReturn = isMustReturn;
+        }
+
+        MayReturn() {
+        }
+    }
+
     public boolean isWellTyped() {
         SymbolTable typeContext = new SymbolTable();
         SymbolTable typeAliasMap = new SymbolTable();
@@ -241,92 +256,224 @@ public class TigerAST {
         Node vardecls = declseg.childAt(1);
         Node funcdecls = declseg.childAt(2);
 
-        int countPushed = 0;
-
         while (typedecls.childAt(0).isNT()) {
             Node currNode = typedecls.childAt(0);
             String typeName = currNode.childAt(1).symbol.strValue();
 
             Node typeDef = currNode.childAt(3);
-            typeAliasMap.push(typeName, typeExprGetType(typeDef, typeAliasMap));
-            countPushed++;
+            TigerType typeDefType = typeExprGetType(typeDef, typeAliasMap);
+            if (typeDefType == null) {
+                return false;
+            }
+            typeAliasMap.push(typeName, typeDefType);
 
             typedecls = typedecls.childAt(1);
         }
 
         while (vardecls.childAt(0).isNT()) {
-            Node currNode = typedecls.childAt(0);
+            Node currNode = vardecls.childAt(0);
             Node typeDef = currNode.childAt(3);
             Node optInit = currNode.childAt(4);
 
             TigerType type = typeExprGetType(typeDef, typeAliasMap);
+            if (type == null) {
+                return false;
+            }
             if (optInit.children.size() > 1) {
                 TigerType optInitType = getTypeConst(optInit.childAt(1));
-                if (!optInitType.equals(type)) {
+                if (optInitType == null || !optInitType.equals(type)) {
                     return false;
                 }
             }
             Node ids = currNode.childAt(1);
 
-            while (ids.childAt(1).isNT()) {
+            while (ids.children.size() > 1) {
                 typeContext.push(ids.childAt(0).symbol.strValue(), type);
-                countPushed++;
-                ids = ids.childAt(1);
+                ids = ids.childAt(2);
             }
             typeContext.push(ids.childAt(0).symbol.strValue(), type);
-            countPushed++;
+
+            vardecls = vardecls.childAt(1);
         }
 
         while (funcdecls.childAt(0).isNT()) {
-            int paramsCounter = 0;
-            Node currNode = typedecls.childAt(0);
+            Node currNode = funcdecls.childAt(0);
             String typeName = currNode.childAt(1).symbol.strValue();
-            Node returnType = currNode.childAt(3);
 
-            TigerType type = typeExprGetType(returnType, typeAliasMap);
+            Node params = currNode.childAt(3);
+            TigerType returnType = typeExprGetType(currNode.childAt(6), typeAliasMap);
+
+            if (returnType == null) {
+                return false;
+            }
 
             List<TigerType> typeParams = new ArrayList<>();
-            typeParams.add(type);
             List<Node> singleParamList = new ArrayList<>();
 
-            if (currNode.childAt(0).isNT()) {
+            if (params.childAt(0).isNT()) {
                 Node singleParamNode;
 
-                Node neparams = currNode.childAt(0).childAt(0);
-                while (neparams.childAt(1).isNT()) {
+                Node neparams = params.childAt(0);
+                while (neparams.children.size() > 1) {
                     singleParamNode = neparams.childAt(0);
                     singleParamList.add(singleParamNode);
-                    typeParams.add(typeExprGetType(singleParamNode.childAt(2), typeAliasMap));
-                    neparams = neparams.childAt(1);
+                    TigerType singleParamType = typeExprGetType(singleParamNode.childAt(2), typeAliasMap);
+                    if (singleParamType == null) {
+                        return false;
+                    }
+                    typeParams.add(singleParamType);
+                    neparams = neparams.childAt(2);
                 }
                 singleParamNode = neparams.childAt(0);
                 singleParamList.add(singleParamNode);
-                typeParams.add(typeExprGetType(singleParamNode.childAt(2), typeAliasMap));
+                TigerType singleParamType = typeExprGetType(singleParamNode.childAt(2), typeAliasMap);
+                if (singleParamType == null) {
+                    return false;
+                }
+                typeParams.add(singleParamType);
             }
+            typeParams.add(returnType);
 
             // push func type
             typeContext.push(typeName, new TigerType(TigerTypeType.FUNCTION, typeParams));
-            countPushed++;
             // push func parameter types
             for (Node currSingleParam: singleParamList) {
                 typeContext.push(currSingleParam.childAt(0).symbol.strValue(),
                         typeExprGetType(currSingleParam.childAt(2), typeAliasMap));
-                paramsCounter++;
             }
 
-            //TODO
+            MayReturn funcType = areStmtsWellTyped(currNode.childAt(8), typeContext);
 
+            if (funcType == null || !funcType.type.equals(returnType)) {
+                return false;
+            }
 
             for (Node currSingleParam: singleParamList) {
                 typeContext.pop();
             }
 
+            funcdecls = funcdecls.childAt(1);
         }
-        return areStmtsWellTyped(root.childAt(3), typeContext, typeAliasMap);
+
+        MayReturn programType = areStmtsWellTyped(root.childAt(3), typeContext);
+        return programType != null && programType.type == null;
     }
 
-    private boolean areStmtsWellTyped(Node curr, SymbolTable typeContext, SymbolTable typeAliasMap) {
-        return false;
+    private MayReturn areStmtsWellTyped(Node curr, SymbolTable typeContext) {
+        TigerType lastType = null;
+
+        while (curr.children.size() > 1) {
+            Node stmt = curr.childAt(0).childAt(0);
+            MayReturn returnType = processStmt(stmt, typeContext);
+
+            if (returnType == null) {
+                return null;
+            }
+
+            if (lastType != null) {
+                if (returnType.type != null
+                        && !returnType.type.equals(lastType)) {
+                    return null;
+                }
+            }
+            lastType = returnType.type;
+
+            if (returnType.isMustReturn) {
+                return returnType;
+            }
+
+
+
+            curr = curr.childAt(1);
+        }
+        Node stmt = curr.childAt(0).childAt(0);
+        return processStmt(stmt, typeContext);
+    }
+
+    private MayReturn processStmt(Node stmt, SymbolTable typeContext) {
+        if (!stmt.childAt(0).isNT()) {
+            switch (stmt.childAt(0).getTerminalType()) {
+                case RETURN:
+                    return new MayReturn(exprGetType(stmt.childAt(1), typeContext), true);
+                case BREAK:
+                    return new MayReturn();
+                case WHILE:
+                case IF:
+                    // check if expression returns Boolean
+                    TigerType condition = exprGetType(stmt.childAt(1), typeContext);
+                    if (condition == null || condition.getType() != TigerTypeType.BOOLEAN) {
+                        return null;
+                    }
+
+                    MayReturn ifType = areStmtsWellTyped(stmt.childAt(3), typeContext);
+                    if (ifType == null) {
+                        return null;
+                    }
+                    if (stmt.children.size() == 5) {
+                        return new MayReturn(ifType.type, false);
+                    } else {
+                        MayReturn elseType = areStmtsWellTyped(stmt.childAt(5), typeContext);
+                        if (elseType == null) {
+                            return null;
+                        }
+
+                        if (ifType.type == null) {
+                            return new MayReturn(elseType.type, false);
+                        } else {
+                            if (elseType.type == null) {
+                                return new MayReturn(ifType.type, false);
+                            } else if (elseType.type.equals(ifType.type)) {
+                                return new MayReturn(elseType.type, elseType.isMustReturn && ifType.isMustReturn);
+                            }
+                            return null;
+                        }
+                    }
+                case FOR:
+                    TigerType id = typeContext.find(stmt.childAt(1).symbol.strValue());
+                    TigerType startCount = exprGetType(stmt.childAt(3), typeContext);
+                    TigerType endCount = exprGetType(stmt.childAt(5), typeContext);
+
+                    if (id == null || startCount == null || endCount == null) {
+                        return null;
+                    }
+
+                    if (!(id.getType() == TigerTypeType.INT
+                            && startCount.getType() == TigerTypeType.INT
+                            && endCount.getType() == TigerTypeType.INT)) {
+                        return null;
+                    }
+                    MayReturn forType = areStmtsWellTyped(stmt.childAt(7), typeContext);
+                    if (forType == null) {
+                        return null;
+                    }
+                    return new MayReturn(forType.type,false);
+                default:
+                    return null;
+            }
+        } else {
+            Node lvalueNode = stmt.childAt(0);
+            TigerType rvalue = exprGetType(stmt.childAt(2), typeContext);
+            TigerType id = typeContext.find(lvalueNode.childAt(0).symbol.strValue());
+
+            if (rvalue == null) {
+                return null;
+            }
+
+            if (lvalueNode.childAt(1).childAt(0).getTerminalType() == TokenType.EPSILON) {
+                if (!rvalue.equals(id)) {
+                    return null;
+                }
+            } else {
+                TigerType offset = exprGetType(lvalueNode.childAt(1).childAt(1), typeContext);
+                if (offset == null || offset.getType() != TigerTypeType.INT) {
+                    return null;
+                }
+                if (!rvalue.equals(id.getTypeParams().get(0))) {
+                    return null;
+                }
+            }
+            return new MayReturn();
+        }
     }
 
     private TigerType exprGetType(Node curr, SymbolTable typeContext) {
@@ -347,19 +494,47 @@ public class TigerAST {
                     }
 
                     TigerType indexType = exprGetType(curr.childAt(3), typeContext);
-                    if (indexType.getType() != TigerTypeType.INT) {
+                    if (indexType == null || indexType.getType() != TigerTypeType.INT) {
                         return null;
                     } else {
                         return idType.getTypeParams().get(0);
                     }
                 } else {
-                    List<TigerType> functionParams = idType.getTypeParams();
-                    return null;
+                    List<TigerType> expectedFunctionParams = idType.getTypeParams();
+                    List<TigerType> functionArgs = new ArrayList<>();
+                    Node argsNode = curr.childAt(3);
+
+                    if (argsNode.childAt(0).isNT()) {
+                        Node neexprs = argsNode.childAt(0);
+                        while (neexprs.children.size() > 1) {
+                            TigerType expr = exprGetType(neexprs.childAt(0), typeContext);
+                            if (expr == null) {
+                                return null;
+                            }
+                            functionArgs.add(expr);
+                            neexprs = neexprs.childAt(2);
+                        }
+                        TigerType expr = exprGetType(neexprs.childAt(0), typeContext);
+                        if (expr == null) {
+                            return null;
+                        }
+                        functionArgs.add(expr);
+                    }
+
+                    // expected function params include return type
+                    if (expectedFunctionParams.size() != functionArgs.size() + 1) {
+                        return null;
+                    }
+                    for (int i = 0; i < functionArgs.size(); i++) {
+                        if (!expectedFunctionParams.get(i).equals(functionArgs.get(i))) {
+                            return null;
+                        }
+                    }
+                    return expectedFunctionParams.get(expectedFunctionParams.size() - 1);
                 }
             } else {
                 return exprGetType(curr.childAt(1), typeContext);
             }
-
         } else if (curr.children.size() == 1) {
             return exprGetType(curr.childAt(0), typeContext);
         } else {
@@ -382,8 +557,8 @@ public class TigerAST {
                 case "-":
                 case "*":
                 case "/":
-                    if (leftSide.getType() != TigerTypeType.FLOAT && leftSide.getType() == TigerTypeType.INT
-                            || rightSide.getType() != TigerTypeType.FLOAT && rightSide.getType() == TigerTypeType.INT) {
+                    if (leftSide.getType() != TigerTypeType.FLOAT && leftSide.getType() != TigerTypeType.INT
+                            || rightSide.getType() != TigerTypeType.FLOAT && rightSide.getType() != TigerTypeType.INT) {
                         return null;
                     }
                     return leftSide.getType() == TigerTypeType.FLOAT
@@ -414,7 +589,11 @@ public class TigerAST {
             return typeAliasMap.find(primitiveNode.symbol.strValue());
         } else {
             List<TigerType> params = new ArrayList<>(1);
-            params.add(typeExprGetType(curr.childAt(5), typeAliasMap));
+            TigerType nestedType = typeExprGetType(curr.childAt(5), typeAliasMap);
+            if (nestedType == null) {
+                return null;
+            }
+            params.add(nestedType);
             return new TigerType(TigerTypeType.ARRAY, params);
         }
     }

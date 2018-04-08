@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.Reader;
+import java.text.ParseException;
 import java.util.Arrays;
 
 public class Main {
@@ -18,17 +19,27 @@ public class Main {
         if (args.length == 0) {
             System.err.println("Specify .tgr file");
             System.exit(1);
-        } else if (args.length ==1) {
-            System.err.println("Specify compiler output");
-            System.exit(1);
         } else {
             try {
+                Reader reader = new FileReader(new File(args[0]));
+
+                TigerAST tree = new TigerAST();
+                TigerParser.parse(reader, tree);
+
+                tree.revertLeftFactoring();
+                tree.revertLeftRecursion();
+                boolean isWellType = tree.isWellTyped();
+                if (!isWellType) {
+                    System.err.println("Type Check Error in " + args[0]);
+                    System.exit(1);
+                }
+
                 if (Arrays.asList(args).contains("--tokens")) {
                     runScanner(args[0]);
                 }
 
                 if (Arrays.asList(args).contains("--ast")) {
-                    runParser(args[0]);
+                    System.out.print(tree);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -53,17 +64,5 @@ public class Main {
             }
             System.out.print(token[0]);
         }
-    }
-
-    private static void runParser(String filename) throws FileNotFoundException {
-        Reader reader = new FileReader(new File(filename));
-
-        TigerAST tree = new TigerAST();
-        TigerParser.parse(reader, tree);
-
-        tree.revertLeftFactoring();
-        tree.revertLeftRecursion();
-
-        System.out.print(tree);
     }
 }
