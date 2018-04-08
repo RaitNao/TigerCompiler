@@ -1,0 +1,8 @@
+let
+    var x : bool;
+    func f ( a: int, b: float ) : bool begin
+      return false;
+    end
+in
+    x := f(0, 1.0);
+end

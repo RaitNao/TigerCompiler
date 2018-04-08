@@ -1,0 +1,1 @@
+let var count:id : int := 10:intlit ; var i:id : int ; var dummy:id : int ; var u:id : unit ; in dummy:id := dummy:id ; for i:id := 1:intlit to count:id + 1:intlit do u:id := printi:id ( i:id ) ; enddo ; dummy:id := dummy:id ; end

@@ -1,0 +1,1 @@
+let var u:id : unit ; var X1:id , X2:id , X3:id , X4:id : int := 0:intlit ; var Y:id : int := 0:intlit ; in Y:id := X1:id + X2:id + X3:id + X4:id ; u:id := printi:id ( X1:id ) ; u:id := printi:id ( X2:id ) ; u:id := printi:id ( X3:id ) ; u:id := printi:id ( X4:id ) ; end

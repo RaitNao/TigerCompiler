@@ -1,0 +1,6 @@
+let
+    var foo : bool;
+    var a, b : int;
+in
+    foo := ((1 + 1 > 9) | foo(a, b, (x > y));
+end

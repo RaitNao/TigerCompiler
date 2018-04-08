@@ -1,7 +1,6 @@
 # Created by .ignore support plugin (hsz.mobi)
 ### Java template
 # Compiled class file
-p1/out/production/TigerCompiler/com/tiger/scanner/CommentMatcher.class
 
 # Log file
 *.log
@@ -96,6 +95,10 @@ crashlytics.properties
 crashlytics-build.properties
 fabric.properties
 
+# Diff files
+*.diff
+
 p2/grades.sh
 !*compiler.jar
 **/META-INF
+**feedback.txt

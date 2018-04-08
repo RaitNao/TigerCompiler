@@ -1,0 +1,10 @@
+let
+  var u : unit;
+	var m : int := 5;
+	func fact ( n : int ) : int begin
+		return n * 2;
+	end;
+in
+	m := fact(m);
+	u := printi(m);
+end

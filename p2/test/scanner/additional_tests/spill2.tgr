@@ -1,0 +1,11 @@
+let
+  var u : unit;
+	var X1, X2, X3, X4 : int := 0;
+	var Y : int := 0;
+in
+	Y := X1 + X2 + X3 + X4;
+	u := printi(X1);
+	u := printi(X2);
+	u := printi(X3);
+	u := printi(X4);
+end

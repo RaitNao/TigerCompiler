@@ -1,0 +1,5 @@
+let
+    var x : int;
+in
+    x := x + x * x / x - x <> 0 & x > x | x;
+end

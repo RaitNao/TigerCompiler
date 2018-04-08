@@ -146,8 +146,13 @@ public class TigerAST {
                 if (revertLeftFactoring(child)) {
                     child.children.forEach(grandchild -> grandchild.parent = curr);
                     curr.children.remove(i);
+                    if (child.childAt(0).isNT() || child.childAt(0).getTerminalType() != TokenType.EPSILON) {
+                        curr.children.addAll(i, child.children);
+                    } else {
+                        curr.expectedNumCh--;
+                    }
                     curr.children.addAll(i, child.children);
-                    curr.expectedNumCh -= (child.children.size() - 1);
+                    curr.expectedNumCh += (child.children.size() - 1);
 
                     // Make sure for loop goes through first "new" child
                     i--;

@@ -18,7 +18,7 @@ public class Main {
         if (args.length == 0) {
             System.err.println("Specify .tgr file");
             System.exit(1);
-        } else if (args.length ==1) {
+        } else if (args.length == 1) {
             System.err.println("Specify compiler output");
             System.exit(1);
         } else {

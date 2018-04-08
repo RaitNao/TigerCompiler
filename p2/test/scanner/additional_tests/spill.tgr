@@ -1,0 +1,39 @@
+let
+  var u : unit;
+	var X1, X2, X3, X4, X5, X6, X7, X8, X9, X10, X11, X12, X13, X14, X15, X16, X17, X18, X19, X20, X21, X22, X23, X24, X25, X26, X27, X28, X29, X30, X31, X32 : int := 0;
+	var Y : int := 0;
+in
+	Y := X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9 + X10 + X11 + X12 + X13 + X14 + X15 + X16 + X17 + X18 + X19 + X20 + X21 + X22 + X23 + X24 + X25 + X26 + X27 + X28 + X29 + X30 + X31 + X32;
+	u := printi(X1);
+	u := printi(X2);
+	u := printi(X3);
+	u := printi(X4);
+	u := printi(X5);
+	u := printi(X6);
+	u := printi(X7);
+	u := printi(X8);
+	u := printi(X9);
+	u := printi(X10);
+	u := printi(X11);
+	u := printi(X12);
+	u := printi(X13);
+	u := printi(X14);
+	u := printi(X15);
+	u := printi(X16);
+	u := printi(X17);
+	u := printi(X18);
+	u := printi(X19);
+	u := printi(X20);
+	u := printi(X21);
+	u := printi(X22);
+	u := printi(X23);
+	u := printi(X24);
+	u := printi(X25);
+	u := printi(X26);
+	u := printi(X27);
+	u := printi(X28);
+	u := printi(X29);
+	u := printi(X30);
+	u := printi(X31);
+	u := printi(X32);
+end

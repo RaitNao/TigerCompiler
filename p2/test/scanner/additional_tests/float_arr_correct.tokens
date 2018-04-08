@@ -1,0 +1,1 @@
+let type ArrayFloat:id := array [ 5:intlit ] of float ; var A:id : ArrayFloat:id := 2.5:floatlit ; var i:id : int := 0:intlit ; var u:id : unit ; in A:id [ 4:intlit ] := 1.5:floatlit ; for i:id := 0:intlit to 5:intlit do u:id := printf:id ( A:id [ i:id ] ) ; enddo ; end

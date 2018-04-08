@@ -1,0 +1,10 @@
+let
+    var u : unit;
+	var A : unit := _;
+	var B : int := 0;
+    func nothing() : unit begin
+        B := B + 1;
+    end;
+in
+    A := B();
+end

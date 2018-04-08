@@ -1,0 +1,1 @@
+let var u:id : unit ; var m:id : int := 5:intlit ; func print:id ( n:id : int ) : unit begin u:id := printi:id ( n:id ) ; end ; in u:id := print:id ( m:id ) ; end

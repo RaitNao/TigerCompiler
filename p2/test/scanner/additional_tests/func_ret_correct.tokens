@@ -1,0 +1,1 @@
+let var u:id : unit ; var m:id : int := 5:intlit ; func fact:id ( n:id : int ) : int begin return n:id * 2:intlit ; end ; in m:id := fact:id ( m:id ) ; u:id := printi:id ( m:id ) ; end
