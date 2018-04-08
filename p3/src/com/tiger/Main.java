@@ -21,6 +21,10 @@ public class Main {
             System.exit(1);
         } else {
             try {
+                if (Arrays.asList(args).contains("--tokens")) {
+                    runScanner(args[0]);
+                }
+
                 Reader reader = new FileReader(new File(args[0]));
 
                 TigerAST tree = new TigerAST();
@@ -28,15 +32,14 @@ public class Main {
 
                 tree.revertLeftFactoring();
                 tree.revertLeftRecursion();
-                TypeChecker checker = new TypeChecker(tree.getRoot());
-                boolean isWellType = checker.isWellTyped();
-                if (!isWellType) {
-                    System.err.println("Type Check Error in " + args[0]);
-                    System.exit(1);
-                }
 
-                if (Arrays.asList(args).contains("--tokens")) {
-                    runScanner(args[0]);
+                if (!Arrays.asList(args).contains("--no-type-check")) {
+                    TypeChecker checker = new TypeChecker(tree.getRoot());
+                    boolean isWellType = checker.isWellTyped();
+                    if (!isWellType) {
+                        System.err.println("Type Check Error in " + args[0]);
+                        System.exit(1);
+                    }
                 }
 
                 if (Arrays.asList(args).contains("--ast")) {

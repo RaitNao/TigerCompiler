@@ -159,7 +159,7 @@ public class TigerAST {
                     } else {
                         curr.expectedNumCh--;
                     }
-                    curr.expectedNumCh -= (child.children.size() - 1);
+                    curr.expectedNumCh += (child.children.size() - 1);
 
                     // Make sure for loop goes through first "new" child
                     i--;

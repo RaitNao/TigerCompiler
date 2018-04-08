@@ -1,0 +1,10 @@
+let
+        type int_arr := array [100] of int;
+        var a : int_arr := 0;
+        var u : unit;
+in
+        for i := 2 to 100 do
+                a[i] := a[i] + a[i-1];
+                u := printi(a[i]);
+        enddo;
+end

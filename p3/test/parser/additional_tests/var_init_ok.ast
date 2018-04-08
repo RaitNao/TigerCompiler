@@ -1,0 +1,1 @@
+(program let (declseg typedecls (vardecls (vardecl var (ids boberto) : (type int) (optinit := (const 1)) ;) (vardecls (vardecl var (ids dumbo) : (type int) optinit ;) vardecls)) funcdecls) in (stmts (fullstmt (stmt (lvalue dumbo optoffset) := (expr (clause (pred (aexpr (term (factor (const 1)))))))) ;)) end)

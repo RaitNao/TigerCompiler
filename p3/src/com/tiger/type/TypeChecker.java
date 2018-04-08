@@ -170,7 +170,9 @@ public class TypeChecker {
 
             MayReturn funcType = areStmtsWellTyped(currNode.childAt(8));
 
-            if (funcType == null || !funcType.type.equals(returnType)) {
+            if (funcType == null
+                    || funcType.type == null
+                    || !funcType.type.equals(returnType)) {
                 return false;
             }
 
@@ -361,13 +363,13 @@ public class TypeChecker {
             } else if (curr.childAt(0).getTerminalType() == TokenType.IDENTIFIER) {
                 TigerType idType = typeContext.find(curr.childAt(0).getSymbolStr());
 
-                if (curr.childAt(3).getSymbolStr().equals("expr")) {
+                if (curr.childAt(2).getSymbolStr().equals("expr")) {
                     // Array indexing => "id" must be Array type and "expr" has to be Integer
                     if (idType.getType() != TigerTypeType.ARRAY) {
                         return null;
                     }
 
-                    TigerType indexType = exprGetType(curr.childAt(3));
+                    TigerType indexType = exprGetType(curr.childAt(2));
                     if (indexType == null || indexType.getType() != TigerTypeType.INT) {
                         return null;
                     } else {
@@ -377,7 +379,7 @@ public class TypeChecker {
                     // Function call
                     List<TigerType> expectedFunctionParams = idType.getTypeParams();
                     List<TigerType> functionArgs = new ArrayList<>();
-                    TigerAST.Node argsNode = curr.childAt(3);
+                    TigerAST.Node argsNode = curr.childAt(2);
 
                     if (argsNode.childAt(0).isNT()) {
                         TigerAST.Node neexprs = argsNode.childAt(0);

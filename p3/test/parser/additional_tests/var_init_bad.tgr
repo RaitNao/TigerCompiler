@@ -1,0 +1,6 @@
+let
+    var dumbo : int;
+    var boberto : int := dumbo;
+in
+    dumbo := 1;
+end

@@ -1,0 +1,6 @@
+let
+        var a, b : boolean := false;
+in
+        a := true | b;
+        b := b & a;
+end

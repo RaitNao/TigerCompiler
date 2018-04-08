@@ -1,0 +1,1 @@
+let var a:id , b:id , c:id , d:id , e:id , f:id , g:id , h:id , cat:id : int ; var i:id , j:id , k:id , l:id , m:id , n:id , o:id , p:id : float ; in a:id := 1:intlit ; cat:id := a:id ; cat:id := b:id ; cat:id := c:id ; cat:id := d:id ; cat:id := e:id ; cat:id := f:id ; cat:id := g:id ; cat:id := h:id ; end

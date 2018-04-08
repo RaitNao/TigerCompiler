@@ -1,0 +1,1 @@
+(program let (declseg typedecls (vardecls (vardecl var (ids sardines) : (type array [ 10 ] of (type int)) optinit ;) (vardecls (vardecl var (ids can) : (type int) optinit ;) vardecls)) funcdecls) in (stmts (fullstmt (stmt (lvalue can optoffset) := (expr (clause (pred (aexpr (term (factor sardines [ (expr (clause (pred (aexpr (term (factor (const 8))))))) ]))))))) ;)) end)

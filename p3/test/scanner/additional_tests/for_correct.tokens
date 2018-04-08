@@ -1,0 +1,1 @@
+let type int_arr:id := array [ 100:intlit ] of int ; var a:id : int_arr:id := 0:intlit ; var u:id : unit ; in for i:id := 2:intlit to 100:intlit do a:id [ i:id ] := a:id [ i:id ] + a:id [ i:id - 1:intlit ] ; u:id := printi:id ( a:id [ i:id ] ) ; enddo ; end
