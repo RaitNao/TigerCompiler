@@ -8,7 +8,9 @@ import java.util.List;
 
 public class TypeChecker {
     private TigerAST.Node root;
+    // Symbol Table for overall context + scoping
     private SymbolTable typeContext;
+    // Typedef Symbol Table
     private SymbolTable typeAliasMap;
 
     public TypeChecker(TigerAST.Node root) {
@@ -19,7 +21,9 @@ public class TypeChecker {
 
 
     private class MayReturn {
+        // Type that a statement "Must" or "May" return
         TigerType type;
+        // Implements the "Must"/"May" classification of statement + function type returns
         boolean isMustReturn;
 
         MayReturn(TigerType type, boolean isMustReturn) {
@@ -27,23 +31,36 @@ public class TypeChecker {
             this.isMustReturn = isMustReturn;
         }
 
+        /*
+        Used by:
+        1. Statements that don't return anything
+        2. Program itself (doesn't return anything)
+         */
         MayReturn() {
         }
     }
 
     public boolean isWellTyped() {
 
+        // create "typedefs" for primitives to themselves for easier lookup
         typeAliasMap.push("int", new TigerType(TigerTypeType.INT));
         typeAliasMap.push("float", new TigerType(TigerTypeType.FLOAT));
         typeAliasMap.push("unit", new TigerType(TigerTypeType.UNIT));
         typeAliasMap.push("boolean", new TigerType(TigerTypeType.BOOLEAN));
 
+        // program → let declseg in stmts end (1)
         TigerAST.Node declseg = root.childAt(1);
 
+        // declseg → typedecls vardecls funcdecls (2)
         TigerAST.Node typedecls = declseg.childAt(0);
         TigerAST.Node vardecls = declseg.childAt(1);
         TigerAST.Node funcdecls = declseg.childAt(2);
 
+        /*
+        typedecls → ϵ (3)
+        typedecls → typedecl typedecls (4)
+        typedecl  → type id := type ; (5)
+         */
         while (typedecls.childAt(0).isNT()) {
             TigerAST.Node currNode = typedecls.childAt(0);
             String typeName = currNode.childAt(1).getSymbolStr();
@@ -58,6 +75,11 @@ public class TypeChecker {
             typedecls = typedecls.childAt(1);
         }
 
+        /*
+        vardecls → ϵ (12)
+        vardecls → vardecl vardecls (13)
+        vardecl  → var ids : type optinit ; (14)
+         */
         while (vardecls.childAt(0).isNT()) {
             TigerAST.Node currNode = vardecls.childAt(0);
             TigerAST.Node typeDef = currNode.childAt(3);
@@ -75,6 +97,10 @@ public class TypeChecker {
             }
             TigerAST.Node ids = currNode.childAt(1);
 
+            /*
+            ids → id (15)
+            ids → id , ids (16)
+             */
             while (ids.getExpectedNumCh() > 1) {
                 typeContext.push(ids.childAt(0).getSymbolStr(), type);
                 ids = ids.childAt(2);
@@ -84,6 +110,11 @@ public class TypeChecker {
             vardecls = vardecls.childAt(1);
         }
 
+        /*
+        funcdecls → ϵ (19)
+        funcdecls → funcdecl funcdecls (20)
+        funcdecl  → func id ( params ) : type begin stmts end ; (21)
+         */
         while (funcdecls.childAt(0).isNT()) {
             TigerAST.Node currNode = funcdecls.childAt(0);
             String typeName = currNode.childAt(1).getSymbolStr();
@@ -98,6 +129,13 @@ public class TypeChecker {
             List<TigerType> typeParams = new ArrayList<>();
             List<TigerAST.Node> singleParamList = new ArrayList<>();
 
+            /*
+            params → ϵ (22)
+            params → neparams (23)
+            neparams → param (24)
+            neparams → param , neparams (25)
+            param → id : type (26)
+             */
             if (params.childAt(0).isNT()) {
                 TigerAST.Node singleParamNode;
 
@@ -124,7 +162,7 @@ public class TypeChecker {
 
             // push func type
             typeContext.push(typeName, new TigerType(TigerTypeType.FUNCTION, typeParams));
-            // push func parameter types
+            // push func parameters and their types
             for (TigerAST.Node currSingleParam: singleParamList) {
                 typeContext.push(currSingleParam.childAt(0).getSymbolStr(),
                         typeExprGetType(currSingleParam.childAt(2)));
@@ -136,6 +174,7 @@ public class TypeChecker {
                 return false;
             }
 
+            // pop the func parameters and their types
             for (TigerAST.Node currSingleParam: singleParamList) {
                 typeContext.pop();
             }
@@ -143,13 +182,23 @@ public class TypeChecker {
             funcdecls = funcdecls.childAt(1);
         }
 
+        // Get well typedness of "stmts" in "program"
         MayReturn programType = areStmtsWellTyped(root.childAt(3));
+
+        // Type of "program" has to be none (null)
         return programType != null && programType.type == null;
     }
 
     private MayReturn areStmtsWellTyped(TigerAST.Node curr) {
+        // If a last non-empty "May" or "Must" return type is different than a new one's
+        // "Stmts" is not well-typed
         TigerType lastType = null;
 
+        /*
+        stmts → fullstmt (27)
+        stmts → fullstmt stmts (28)
+        fullstmt → stmt ; (29)
+         */
         while (curr.getExpectedNumCh() > 1) {
             TigerAST.Node stmt = curr.childAt(0).childAt(0);
             MayReturn returnType = processStmt(stmt);
@@ -166,11 +215,10 @@ public class TypeChecker {
             }
             lastType = returnType.type;
 
+            // If we get a "Must" return, then we don't need to analyze later statements
             if (returnType.isMustReturn) {
                 return returnType;
             }
-
-
 
             curr = curr.childAt(1);
         }
@@ -182,12 +230,20 @@ public class TypeChecker {
         if (!stmt.childAt(0).isNT()) {
             switch (stmt.childAt(0).getTerminalType()) {
                 case RETURN:
+                    // stmt → return expr (36)
                     return new MayReturn(exprGetType(stmt.childAt(1)), true);
                 case BREAK:
+                    // stmt → break (35)
                     return new MayReturn();
                 case WHILE:
                 case IF:
-                    // check if expression returns Boolean
+                    /*
+                    stmt → if expr then stmts endif (31)
+                    stmt → if expr then stmts else stmts endif (32)
+                    stmt → while expr do stmts enddo (33)
+                     */
+
+                    // check if "expr" returns Boolean type
                     TigerType condition = exprGetType(stmt.childAt(1));
                     if (condition == null || condition.getType() != TigerTypeType.BOOLEAN) {
                         return null;
@@ -205,6 +261,11 @@ public class TypeChecker {
                             return null;
                         }
 
+                        /*
+                        If "if" "stmts" "May"/"Must" returns type T, then "else" "stmts" also has to "May"/"Must" return T
+                        Or if one "stmts" returns none, type of "stmt" is "Maybe" T, where T is type returned by the
+                        other "stmts"
+                         */
                         if (ifType.type == null) {
                             return new MayReturn(elseType.type, false);
                         } else {
@@ -217,6 +278,8 @@ public class TypeChecker {
                         }
                     }
                 case FOR:
+                    // stmt → for id := expr to expr do stmts enddo (34)
+                    // "id" and both "expr" must be type Integer
                     TigerType id = typeContext.find(stmt.childAt(1).getSymbolStr());
                     TigerType startCount = exprGetType(stmt.childAt(3));
                     TigerType endCount = exprGetType(stmt.childAt(5));
@@ -239,6 +302,8 @@ public class TypeChecker {
                     return null;
             }
         } else {
+            // stmt → lvalue := expr (30)
+            // both sides need to be of same type
             TigerAST.Node lvalueNode = stmt.childAt(0);
             TigerType rvalue = exprGetType(stmt.childAt(2));
             TigerType id = typeContext.find(lvalueNode.childAt(0).getSymbolStr());
@@ -265,7 +330,27 @@ public class TypeChecker {
     }
 
     private TigerType exprGetType(TigerAST.Node curr) {
+        /*
+        expr → clause (44)
+        expr → expr | clause (45)
+        clause → pred (46)
+        clause → clause & pred (47)
+        pred → aexpr (48)
+        pred → aexpr cmp aexpr (49)
+        aexpr → term (56)
+        aexpr → aexpr linop term (57)
+        term → factor (60)
+        term → term nonlinop factor (61)
+         */
         if (curr.getSymbolStr().equals("factor")) {
+
+            /*
+            factor → const (64)
+            factor → id (65)
+            factor → id [ expr ] (66)
+            factor → id ( exprs ) (67)
+            factor → ( expr ) (68)
+             */
             if (curr.getExpectedNumCh() == 1) {
                 if (curr.childAt(0).getSymbolStr().equals("const")) {
                     return getTypeConst(curr.childAt(0));
@@ -277,6 +362,7 @@ public class TypeChecker {
                 TigerType idType = typeContext.find(curr.childAt(0).getSymbolStr());
 
                 if (curr.childAt(3).getSymbolStr().equals("expr")) {
+                    // Array indexing => "id" must be Array type and "expr" has to be Integer
                     if (idType.getType() != TigerTypeType.ARRAY) {
                         return null;
                     }
@@ -288,6 +374,7 @@ public class TypeChecker {
                         return idType.getTypeParams().get(0);
                     }
                 } else {
+                    // Function call
                     List<TigerType> expectedFunctionParams = idType.getTypeParams();
                     List<TigerType> functionArgs = new ArrayList<>();
                     TigerAST.Node argsNode = curr.childAt(3);
@@ -345,6 +432,8 @@ public class TypeChecker {
                 case "-":
                 case "*":
                 case "/":
+                    // In arithmetic operations only Integer and Float types are permitted
+                    // If any of operands is Float => promotion is done if the other operand is Integer
                     if (leftSide.getType() != TigerTypeType.FLOAT && leftSide.getType() != TigerTypeType.INT
                             || rightSide.getType() != TigerTypeType.FLOAT && rightSide.getType() != TigerTypeType.INT) {
                         return null;
@@ -358,9 +447,11 @@ public class TypeChecker {
                 case "<=":
                 case "=":
                 case "<>":
+                    // No well-typedness check in comparison logic
                     return new TigerType(TigerTypeType.BOOLEAN);
                 case "|":
                 case "&":
+                    // Operands of & and | must be Boolean
                     return leftSide.getType() == TigerTypeType.BOOLEAN
                             && rightSide.getType() == TigerTypeType.BOOLEAN
                             ? new TigerType(TigerTypeType.BOOLEAN) : null;
@@ -376,6 +467,7 @@ public class TypeChecker {
             TigerAST.Node primitiveNode = curr.childAt(0);
             return typeAliasMap.find(primitiveNode.getSymbolStr());
         } else {
+            // type → array [ intlit ] of type (11)
             List<TigerType> params = new ArrayList<>(1);
             TigerType nestedType = typeExprGetType(curr.childAt(5));
             if (nestedType == null) {
