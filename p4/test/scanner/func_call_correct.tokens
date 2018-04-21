@@ -1,0 +1,1 @@
+let var u:id : unit ; func return_it:id ( n:id : int ) : int begin return ( n:id ) ; end ; in u:id := return_it:id ( 5:intlit ) ; end

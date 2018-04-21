@@ -1,0 +1,1 @@
+let var u:id : unit ; var a:id , b:id : int := 7:intlit ; in a:id := 1:intlit ; while a:id < 100:intlit do a:id := a:id + b:id ; enddo ; u:id := printi:id ( a:id ) ; end

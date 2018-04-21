@@ -1,0 +1,1 @@
+let var a:id , b:id : int := 0:intlit ; in a:id := b:id + 2:intlit * 3:intlit + 4:intlit - 5:intlit ; end

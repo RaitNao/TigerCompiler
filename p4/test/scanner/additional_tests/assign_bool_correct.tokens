@@ -1,0 +1,1 @@
+let var a:id , b:id : boolean := false ; in a:id := true | b:id ; b:id := b:id & a:id ; end

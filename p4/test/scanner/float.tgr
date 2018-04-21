@@ -1,0 +1,7 @@
+let
+	var A : float;
+  var u : unit;
+in
+	A := 1.5;
+	u := printf(A);
+end

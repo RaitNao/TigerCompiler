@@ -1,0 +1,1 @@
+let var a:id , w:id , x:id , y:id , z:id : int ; var b:id , c:id , d:id , e:id , f:id : float ; func twicef:id ( n:id : float ) : float begin return n:id + n:id ; end ; func twiced:id ( n:id : int ) : int begin return n:id + n:id ; end ; in a:id := twiced:id ( 7:intlit ) ; end
