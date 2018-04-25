@@ -1,0 +1,34 @@
+let
+    var pescado : int;
+    var carne : int;
+    var a : int;
+    var b : int;
+    var res : int;
+    var c : int;
+    func twicef ( n : int ) : int begin
+        n := n - 5;
+        if n > 10 then
+            return n + n;
+        endif;
+        n := n + 1;
+        return n * 3;
+        n := n + 2;
+    end;
+in
+    b := a;/*DEAD*/
+
+    c := twicef(b);
+
+    if carne = 100 then
+        a := a + 1;
+        for b := 1 to 100 do
+            a := a / 2;
+            while res <> 0 do
+                break;
+            enddo;
+            break;
+            a := a * 2;
+        enddo;
+        b := carne + a;
+    endif;
+end

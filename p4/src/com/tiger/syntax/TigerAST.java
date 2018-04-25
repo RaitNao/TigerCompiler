@@ -76,6 +76,19 @@ public class TigerAST {
             return symbol.strValue();
         }
 
+        public List<TigerToken[]> getTokens() {
+            List<TigerToken[]> tokenList = new ArrayList<>();
+            if (this.isNT()) {
+                for (Node child: children) {
+                    List<TigerToken[]> childList = child.getTokens();
+                    tokenList.addAll(childList);
+                }
+            } else {
+                tokenList.add(new TigerToken[]{(TigerToken) symbol});
+            }
+            return tokenList;
+        }
+
         @Override
         public String toString() {
 

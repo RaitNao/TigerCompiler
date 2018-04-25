@@ -12,17 +12,12 @@ import java.util.Iterator;
 import java.util.Stack;
 
 public class TigerParser {
-    private static Stack<TigerSymbol> stack = null;
 
-    public static void parse(Reader reader, TigerAST AST) {
-        TigerScanner sc = new TigerScanner(reader);
-        Iterator<TigerToken[]> iter = sc.iterator();
-        stack = new Stack<>();
+    public static void parse(Iterator<TigerToken[]> iter, TigerAST AST, TigerSymbol top) {
+        Stack<TigerSymbol> stack = new Stack<>();
         TigerToken[] token = iter.next();
 
         stack.push(LLTable.EOF);
-
-        TigerSymbol top = LLTable.startSymbol;
         try {
             while (iter.hasNext()) {
                 if (top instanceof TigerToken && ((TigerToken) top).getType() == TokenType.EOF) {
@@ -62,5 +57,13 @@ public class TigerParser {
             System.err.println("Unable to process token " + token[0].strValue());
             System.exit(1);
         }
+    }
+
+    public static void parse(Reader reader, TigerAST AST) {
+        TigerScanner sc = new TigerScanner(reader);
+        Iterator<TigerToken[]> iter = sc.iterator();
+
+        TigerSymbol top = LLTable.startSymbol;
+        parse(iter, AST, top);
     }
 }

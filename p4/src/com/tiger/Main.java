@@ -1,5 +1,6 @@
 package com.tiger;
 
+import com.tiger.controlflow.CFG;
 import com.tiger.parser.TigerParser;
 import com.tiger.scanner.TigerScanner;
 import com.tiger.scanner.TigerToken;
@@ -33,6 +34,8 @@ public class Main {
                 tree.revertLeftFactoring();
                 tree.revertLeftRecursion();
 
+                CFG cfg = new CFG(tree.getRoot().childAt(3));
+                CFG funcs = new CFG(tree.getRoot().childAt(1).childAt(2).childAt(0).childAt(8));
                 if (!Arrays.asList(args).contains("--no-type-check")) {
                     TypeChecker checker = new TypeChecker(tree.getRoot());
                     boolean isWellType = checker.isWellTyped();

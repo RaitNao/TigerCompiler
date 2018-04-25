@@ -1,0 +1,21 @@
+let
+    var pescado : int;
+    var carne : int;
+    var a : int;
+    var b : int; 
+    var res : int;
+    var c : int;
+    var d : int;
+in
+    a := 100;
+    b := a;
+    for a := 1 to 10 do
+        carne := a+b;
+    enddo;
+    if carne > 10 then
+        res := carne + a;
+    else
+        res := 0;
+    endif;
+    c := a + b; /*CSE*/
+end
