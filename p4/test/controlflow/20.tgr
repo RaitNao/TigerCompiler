@@ -12,8 +12,8 @@ in
     b := a;
     if c > 100 then
         res1 := carne + a;
-        for a := 1 to 100 do
-            carne := carne + a;
+        for b := 1 to 100 do
+            pescado := carne + a;/*CSE*/
         enddo;
     else
         res2 := carne + a;

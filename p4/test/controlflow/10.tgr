@@ -8,7 +8,7 @@ let
 in
     a := 100;
     b := a;
-    carne := b;/*Bonus: DEAD*/
+    res := a + b;
     for a := 1 to 100 do
         carne := a+b;
     enddo;

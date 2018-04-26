@@ -35,8 +35,7 @@ public class Main {
                 tree.revertLeftRecursion();
 
                 CFGAnalyzer analyzer = new CFGAnalyzer(tree);
-                analyzer.printCommonSubexpressionElimination();
-                analyzer.printDeadCode();
+                analyzer.printEliminations();
                 if (!Arrays.asList(args).contains("--no-type-check")) {
                     TypeChecker checker = new TypeChecker(tree.getRoot());
                     boolean isWellType = checker.isWellTyped();

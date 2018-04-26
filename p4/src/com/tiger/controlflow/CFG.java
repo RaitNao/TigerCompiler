@@ -26,8 +26,13 @@ public class CFG {
         end = new CFGNode();
         end.isUseful = true;
         start = buildSubCFG(statements, end, false, false,null, end);
-        computeAllAvail();
         criticals.addAll(globals);
+    }
+
+    public void printEliminations() {
+        printDeadCode();
+        computeAllAvail();
+        printCommonSubexpressionElimination();
     }
 
     private CFGNode buildSubCFG(TigerAST.Node node, CFGNode nextStmt, boolean isNextBackEdge,
@@ -146,17 +151,20 @@ public class CFG {
                     }
                     case "break": {
                         CFGNode breakNode = new CFGNode(node);
+                        breakNode.isUseful = true;
                         if (nextAfterLoopStmt == null) {
                             breakNode.connectNode(nextStmt);
                         } else {
                             breakNode.connectNode(nextAfterLoopStmt);
                             breakNode.nextIsBackEdge = isNextAfterLoopBackEdge;
+                            this.deadList.add(nextStmt);
                         }
 
                         return breakNode;
                     }
                     case "return": {
                         CFGNode returnCFG = new CFGNode(node);
+                        returnCFG.isUseful = true;
                         this.deadList.add(nextStmt);
                         returnCFG.connectNode(endStmt);
 
@@ -176,20 +184,21 @@ public class CFG {
         }
     }
 
-    private void printStatement(CFGNode node) {
-        node.statement.getSingleTokens().forEach(x -> {
-            if (x.strValue() != null) {
-                System.err.print(x.strValue() + " ");
+    private void computeAllAvail() {
+        boolean updated;
+        start.availComputed = true;
+        do {
+            updated = false;
+            for (CFGNode node: statementList) {
+                updated |= node.computeAvail();
             }
-        });
+        } while (updated);
     }
 
-    public void printCommonSubexpressionElimination() {
+    private void printCommonSubexpressionElimination() {
         for (CFGNode node: statementList) {
             if (node.statement != null && node.statement.isNT()) {
                 switch (node.statement.getSymbolStr()) {
-                    case "expr":
-                        break;
                     case "stmt":
                         switch (node.statement.getExpectedNumCh()) {
                             case 3:
@@ -211,17 +220,33 @@ public class CFG {
         }
     }
 
-    public void printDeadCode() {
+    private void printStatement(CFGNode node) {
+        node.statement.getSingleTokens().forEach(x -> {
+            if (x.strValue() != null) {
+                System.err.print(x.strValue() + " ");
+            }
+        });
+    }
+
+    private void printDeadCode() {
         for (TigerToken token: criticals) {
             recursiveFindDefs(token, end);
         }
 
+        for (CFGNode el: this.deadList) {
+            CFGNode curr = el;
+            if (curr.previousBlocks.size() != 0) {
+                continue;
+            }
+            while (curr != null && curr.statement != null && curr.previousBlocks.size() < 2) {
+                curr.isUseful = false;
+                curr = curr.nextBlock;
+            }
+        }
+
         for (CFGNode node: statementList) {
             if (node.altNextBlock == null && !node.isUseful
-                    && node.statement != null
-                    && !"break".equals(node.statement.getSingleTokens().get(0).strValue())
-                    && !"return".equals(node.statement.getSingleTokens().get(0).strValue())) {
-                deadList.add(node);
+                    && node.statement != null) {
                 printStatement(node);
                 System.err.println(";\t/* Dead */");
             } else {
@@ -257,7 +282,11 @@ public class CFG {
                 if (curr.previousBlocks.size() == 0) {
                     break;
                 }
-                traversed = true;
+                if (curr.statement != null && curr.statement.getSymbolStr().equals("stmt")
+                        && curr.statement.getExpectedNumCh() == 3
+                        && curr.statement.childAt(0).getSingleTokens().get(0).equals(var)) {
+                    traversed = true;
+                }
                 curr = (CFGNode) curr.previousBlocks.toArray()[0];
             }
         }
@@ -282,17 +311,6 @@ public class CFG {
             }
         }
         return definitions;
-    }
-
-    private void computeAllAvail() {
-        boolean updated;
-        start.availComputed = true;
-        do {
-            updated = false;
-            for (CFGNode node: statementList) {
-                updated |= node.computeAvail();
-            }
-        } while (updated);
     }
 
     private class CFGNode {
@@ -355,24 +373,29 @@ public class CFG {
             Set<List<TigerToken>> localAvail = new HashSet<>();
             boolean isInitialized = false;
             for (CFGNode parent: this.previousBlocks) {
-                if (parent.DEexpr != null) {
-                    localAvail.add(parent.DEexpr);
-                }
-                for (List<TigerToken> parentAvailEl: parent.availSet) {
-                    if (!parent.isKilled(parentAvailEl)) {
-                        localAvail.add(parentAvailEl);
+                if (parent.isUseful) {
+                    if (parent.DEexpr != null) {
+                        localAvail.add(parent.DEexpr);
                     }
-                }
-                if (!isInitialized && parent.availComputed) {
-                    this.availSet.addAll(localAvail);
-                    isInitialized = true;
+                } else {
                     this.availComputed = true;
-                } else if (isInitialized) {
-                    if (parent.availComputed) {
-                        this.availSet.retainAll(localAvail);
-                    }
                 }
-                localAvail.clear();
+                    for (List<TigerToken> parentAvailEl : parent.availSet) {
+                        if (!parent.isKilled(parentAvailEl)) {
+                            localAvail.add(parentAvailEl);
+                        }
+                    }
+                    if (!isInitialized && parent.availComputed) {
+                        this.availSet.addAll(localAvail);
+                        isInitialized = true;
+                        this.availComputed = true;
+                    } else if (isInitialized) {
+                        if (parent.availComputed) {
+                            this.availSet.retainAll(localAvail);
+                        }
+                    }
+                    localAvail.clear();
+
             }
 
             if (oldAvail.size() == this.availSet.size() && oldAvail.containsAll(this.availSet)) {

@@ -47,17 +47,10 @@ public class CFGAnalyzer {
         return tokenSet;
     }
 
-    public void printCommonSubexpressionElimination() {
-        mainStmts.printCommonSubexpressionElimination();
+    public void printEliminations() {
+        mainStmts.printEliminations();
         for (CFG funcStmts: this.funcStmtsList) {
-            funcStmts.printCommonSubexpressionElimination();
-        }
-    }
-
-    public void printDeadCode() {
-        mainStmts.printDeadCode();
-        for (CFG funcStmts: this.funcStmtsList) {
-            funcStmts.printDeadCode();
+            funcStmts.printEliminations();
         }
     }
 }

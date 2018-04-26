@@ -1,6 +1,7 @@
 let
     var pescado : int;
     var carne : int;
+    var dumbo : int;
     var a : int;
     var b : int; 
     var res1 : int;
@@ -8,6 +9,18 @@ let
     var res3 : int;
     var res4 : int;
     var res5 : int;
+        func return_it(n : int, m : int) : int begin
+            n := dumbo * m; 
+            dumbo := n + m;         /*DEAD*/
+            if carne = 100 then
+                    dumbo := dumbo * m; /*DEAD*/
+                else
+                    dumbo := carne;/*DEAD*/
+            endif;
+            dumbo := res2;                                                                                                                                                                                  
+            return n;
+    end;
+
 in
     for b := 1 to 100 do
         res1 := a+carne;
@@ -17,5 +30,5 @@ in
     else
         res4 := a;
     endif;
-    res5 := a+carne;/*CSE*/
+    res5 := a+carne;/*Bonus: CSE*/
 end
