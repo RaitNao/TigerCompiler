@@ -89,6 +89,19 @@ public class TigerAST {
             return tokenList;
         }
 
+        public List<TigerToken> getSingleTokens() {
+            List<TigerToken> singleTokenList = new ArrayList<>();
+            if (this.isNT()) {
+                for (Node child: children) {
+                    List<TigerToken> childList = child.getSingleTokens();
+                    singleTokenList.addAll(childList);
+                }
+            } else {
+                singleTokenList.add((TigerToken) symbol);
+            }
+            return singleTokenList;
+        }
+
         @Override
         public String toString() {
 
