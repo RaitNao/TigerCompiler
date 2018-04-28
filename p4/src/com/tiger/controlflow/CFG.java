@@ -17,12 +17,14 @@ public class CFG {
     // end is a sentinel node
     private CFGNode end;
     private List<CFGNode> statementList;
+    private List<CFGNode> funcCalls;
 
     private Set<TigerToken> criticals = new HashSet<>();
 
     public CFG(TigerAST.Node statements, Set<TigerToken> globals) {
         deadList = new ArrayList<>();
         statementList = new ArrayList<>();
+        funcCalls = new ArrayList<>();
         end = new CFGNode();
         end.isUseful = true;
         start = buildSubCFG(statements, end, false, false,null);
@@ -172,9 +174,15 @@ public class CFG {
                         return returnCFG;
                     }
                     default: {
+                        TigerToken leftParan = new TigerToken(TokenType.LPAREN);
+                        TigerToken rightParan = new TigerToken(TokenType.RPAREN);
                         CFGNode assign = new CFGNode(node);
                         assign.connectNode(nextStmt);
                         assign.nextIsBackEdge = isNextBackEdge;
+                        if (assign.DEexpr != null
+                                && assign.DEexpr.contains(leftParan) && assign.DEexpr.contains(rightParan)) {
+                            this.funcCalls.add(assign);
+                        }
                         return assign;
                     }
                 }
@@ -203,8 +211,11 @@ public class CFG {
                             case 3:
                                 if (node.availSet.contains(node.statement.childAt(2).getSingleTokens())
                                         && node.isUseful) {
-                                    printStatement(node);
-                                    System.err.println(";\t\t/* CSE */");
+                                    if (!(node.statement.childAt(2).getSingleTokens().size() == 1 &&
+                                            node.statement.childAt(2).getSingleTokens().get(0).getType() == TokenType.INTLIT)) {
+                                        printStatement(node);
+                                        System.err.println(";\t\t/* CSE */");
+                                    }
                                 }
                                 break;
                             case 2:
@@ -235,6 +246,14 @@ public class CFG {
             recursiveFindDefs(token, end);
         }
 
+        for (CFGNode el: funcCalls) {
+            List<TigerToken> tokens = el.getRhsOperands();
+            for (TigerToken token: tokens) {
+                recursiveFindDefs(token, el);
+                el.isUseful = true;
+            }
+        }
+
         for (CFGNode el: this.deadList) {
             CFGNode curr = el;
             if (curr.previousBlocks.size() != 0) {
@@ -246,18 +265,13 @@ public class CFG {
             }
         }
 
-        TigerToken leftParan = new TigerToken(TokenType.LPAREN);
-        TigerToken rightParan = new TigerToken(TokenType.RPAREN);
         for (CFGNode node: statementList) {
             if (node.altNextBlock == null && !node.isUseful
                     && node.statement != null) {
 
-                if (node.DEexpr != null
-                        && !(node.DEexpr.contains(leftParan) && node.DEexpr.contains(rightParan))) {
+                if (node.DEexpr != null) {
                     printStatement(node);
                     System.err.println(";\t\t/* Dead */");
-                } else {
-                    node.isUseful = true;
                 }
             } else {
                 node.isUseful = true;
