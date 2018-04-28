@@ -48,7 +48,7 @@ public class TigerToken implements TigerSymbol {
         }
 
         TigerToken other = (TigerToken) obj;
-        return other.value.equals(value) && other.type == type;
+        return other.type == type && other.value.equals(value);
     }
 
     @Override

@@ -14,13 +14,30 @@ let
         n := n + 1;
         n := n + 5;
         return 3;
-        n := 5;
+        n := 6; /* dead */
+    end;
+    func change ( pescado : int , carne: int ) : int begin
+        pescado := 99; /* should be dead code */
+        carne := 42;
+        return carne;
+    end;
+    func change2 ( pescado : int , carne: int ) : int begin
+        c := a + b;
+        carne := a + b; /* should be CSE */
+        return carne;
+    end;
+    func change3 ( pescado : int , carne: int ) : int begin
+        a := res + c;
+        carne := res + c; /* should be dead code */
+        return b;
     end;
 in
+    b := 5; /* check for dead code */
+
+    c := twicef(b); /* check for NOT dead code */
     b := a;
-
-    c := twicef(b);
-
+    c := 5;
+    a := twicef(b); /* check for NOT CSE */
     if carne = 100 then
         a := a + 1;
         for b := 1 to 100 do
@@ -28,11 +45,11 @@ in
             while res <> 0 do
                 res := a + b;
                 break;
-                a := a + 1;
+                a := a + 1; /* dead code */
             enddo;
             a := a - 1;
             break;
-            a := a * 2;
+            a := a * 2; /* dead code */
         enddo;
         b := carne + a;
     endif;

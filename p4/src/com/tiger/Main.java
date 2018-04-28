@@ -34,8 +34,6 @@ public class Main {
                 tree.revertLeftFactoring();
                 tree.revertLeftRecursion();
 
-                CFGAnalyzer analyzer = new CFGAnalyzer(tree);
-                analyzer.printEliminations();
                 if (!Arrays.asList(args).contains("--no-type-check")) {
                     TypeChecker checker = new TypeChecker(tree.getRoot());
                     boolean isWellType = checker.isWellTyped();
@@ -44,6 +42,9 @@ public class Main {
                         System.exit(1);
                     }
                 }
+
+                CFGAnalyzer analyzer = new CFGAnalyzer(tree);
+                analyzer.printEliminations();
 
                 if (Arrays.asList(args).contains("--ast")) {
                     System.out.print(tree);

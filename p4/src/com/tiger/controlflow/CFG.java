@@ -25,7 +25,7 @@ public class CFG {
         statementList = new ArrayList<>();
         end = new CFGNode();
         end.isUseful = true;
-        start = buildSubCFG(statements, end, false, false,null, end);
+        start = buildSubCFG(statements, end, false, false,null);
         criticals.addAll(globals);
     }
 
@@ -36,27 +36,27 @@ public class CFG {
     }
 
     private CFGNode buildSubCFG(TigerAST.Node node, CFGNode nextStmt, boolean isNextBackEdge,
-                                boolean isNextAfterLoopBackEdge, CFGNode nextAfterLoopStmt, CFGNode endStmt) {
+                                boolean isNextAfterLoopBackEdge, CFGNode nextAfterLoopStmt) {
         switch (node.getSymbolStr()) {
             case "stmts":
                 CFGNode fullstmt;
                 if (node.getExpectedNumCh() == 2) {
-                    CFGNode stmts = buildSubCFG(node.childAt(1), nextStmt, isNextBackEdge, isNextAfterLoopBackEdge, nextAfterLoopStmt, endStmt);
-                    fullstmt = buildSubCFG(node.childAt(0), stmts, false, isNextAfterLoopBackEdge, nextAfterLoopStmt, endStmt);
+                    CFGNode stmts = buildSubCFG(node.childAt(1), nextStmt, isNextBackEdge, isNextAfterLoopBackEdge, nextAfterLoopStmt);
+                    fullstmt = buildSubCFG(node.childAt(0), stmts, false, isNextAfterLoopBackEdge, nextAfterLoopStmt);
                 } else {
-                    fullstmt = buildSubCFG(node.childAt(0), nextStmt, isNextBackEdge, isNextAfterLoopBackEdge, nextAfterLoopStmt, endStmt);
+                    fullstmt = buildSubCFG(node.childAt(0), nextStmt, isNextBackEdge, isNextAfterLoopBackEdge, nextAfterLoopStmt);
                 }
                 return fullstmt;
             case "fullstmt":
-                return buildSubCFG(node.childAt(0), nextStmt, isNextBackEdge, isNextAfterLoopBackEdge, nextAfterLoopStmt, endStmt);
+                return buildSubCFG(node.childAt(0), nextStmt, isNextBackEdge, isNextAfterLoopBackEdge, nextAfterLoopStmt);
             case "stmt":
                 switch (node.childAt(0).getSymbolStr()) {
                     case "if": {
                         CFGNode expr = new CFGNode(node.childAt(1));
-                        CFGNode ifStmts = buildSubCFG(node.childAt(3), nextStmt, isNextBackEdge, isNextAfterLoopBackEdge, nextAfterLoopStmt, endStmt);
+                        CFGNode ifStmts = buildSubCFG(node.childAt(3), nextStmt, isNextBackEdge, isNextAfterLoopBackEdge, nextAfterLoopStmt);
                         expr.connectNode(ifStmts);
                         if (node.getExpectedNumCh() == 7) {
-                            CFGNode elseStmts = buildSubCFG(node.childAt(5), nextStmt, isNextBackEdge, isNextAfterLoopBackEdge, nextAfterLoopStmt, endStmt);
+                            CFGNode elseStmts = buildSubCFG(node.childAt(5), nextStmt, isNextBackEdge, isNextAfterLoopBackEdge, nextAfterLoopStmt);
                             expr.altConnectNode(elseStmts);
                         } else {
                             expr.altConnectNode(nextStmt);
@@ -65,7 +65,7 @@ public class CFG {
                     }
                     case "while": {
                         CFGNode expr = new CFGNode(node.childAt(1));
-                        CFGNode stmts = buildSubCFG(node.childAt(3), expr, true, isNextBackEdge, nextStmt, endStmt);
+                        CFGNode stmts = buildSubCFG(node.childAt(3), expr, true, isNextBackEdge, nextStmt);
 
                         expr.connectNode(stmts);
 
@@ -143,7 +143,7 @@ public class CFG {
                         CFGNode increment = new CFGNode(incrementAst.getRoot());
                         expr.connectNode(increment);
 
-                        CFGNode stmts = buildSubCFG(node.childAt(7), expr, true, isNextBackEdge, nextStmt, endStmt);
+                        CFGNode stmts = buildSubCFG(node.childAt(7), expr, true, isNextBackEdge, nextStmt);
                         increment.connectNode(stmts);
                         expr.altConnectNode(nextStmt);
 
@@ -166,7 +166,7 @@ public class CFG {
                         CFGNode returnCFG = new CFGNode(node);
                         returnCFG.isUseful = true;
                         this.deadList.add(nextStmt);
-                        returnCFG.connectNode(endStmt);
+                        returnCFG.connectNode(this.end);
 
                         criticals.addAll(returnCFG.getRhsOperands());
 
@@ -202,15 +202,17 @@ public class CFG {
                     case "stmt":
                         switch (node.statement.getExpectedNumCh()) {
                             case 3:
-                                if (node.availSet.contains(node.statement.childAt(2).getSingleTokens())) {
+                                if (node.availSet.contains(node.statement.childAt(2).getSingleTokens())
+                                        && node.isUseful) {
                                     printStatement(node);
-                                    System.err.println(";\t/* CSE */");
+                                    System.err.println(";\t\t/* CSE */");
                                 }
                                 break;
                             case 2:
-                                if (node.availSet.contains(node.statement.childAt(1).getSingleTokens())) {
+                                if (node.availSet.contains(node.statement.childAt(1).getSingleTokens())
+                                        && node.isUseful) {
                                     printStatement(node);
-                                    System.err.println(";\t/* CSE */");
+                                    System.err.println(";\t\t/* CSE */");
                                 }
                                 break;
                         }
@@ -221,6 +223,7 @@ public class CFG {
     }
 
     private void printStatement(CFGNode node) {
+        System.err.print("    ");
         node.statement.getSingleTokens().forEach(x -> {
             if (x.strValue() != null) {
                 System.err.print(x.strValue() + " ");
@@ -244,11 +247,19 @@ public class CFG {
             }
         }
 
+        TigerToken leftParan = new TigerToken(TokenType.LPAREN);
+        TigerToken rightParan = new TigerToken(TokenType.RPAREN);
         for (CFGNode node: statementList) {
             if (node.altNextBlock == null && !node.isUseful
                     && node.statement != null) {
-                printStatement(node);
-                System.err.println(";\t/* Dead */");
+
+                if (node.DEexpr != null
+                        && !(node.DEexpr.contains(leftParan) && node.DEexpr.contains(rightParan))) {
+                    printStatement(node);
+                    System.err.println(";\t\t/* Dead */");
+                } else {
+                    node.isUseful = true;
+                }
             } else {
                 node.isUseful = true;
             }
@@ -368,33 +379,39 @@ public class CFG {
         }
 
         private boolean computeAvail() {
+            TigerToken leftParan = new TigerToken(TokenType.LPAREN);
+            TigerToken rightParan = new TigerToken(TokenType.RPAREN);
+
             Set<List<TigerToken>> oldAvail = this.availSet;
             this.availSet = new HashSet<>();
             Set<List<TigerToken>> localAvail = new HashSet<>();
             boolean isInitialized = false;
             for (CFGNode parent: this.previousBlocks) {
                 if (parent.isUseful) {
-                    if (parent.DEexpr != null) {
+                    // CSE is run after Dead Code elimination, so all
+                    // function calls, statements after return and break, etc. are set with correct usefulness
+                    if (parent.DEexpr != null
+                            && !(parent.DEexpr.contains(leftParan) && parent.DEexpr.contains(rightParan))) {
                         localAvail.add(parent.DEexpr);
                     }
                 } else {
                     this.availComputed = true;
                 }
-                    for (List<TigerToken> parentAvailEl : parent.availSet) {
-                        if (!parent.isKilled(parentAvailEl)) {
-                            localAvail.add(parentAvailEl);
-                        }
+                for (List<TigerToken> parentAvailEl : parent.availSet) {
+                    if (!parent.isKilled(parentAvailEl)) {
+                        localAvail.add(parentAvailEl);
                     }
-                    if (!isInitialized && parent.availComputed) {
-                        this.availSet.addAll(localAvail);
-                        isInitialized = true;
-                        this.availComputed = true;
-                    } else if (isInitialized) {
-                        if (parent.availComputed) {
-                            this.availSet.retainAll(localAvail);
-                        }
+                }
+                if (!isInitialized && parent.availComputed) {
+                    this.availSet.addAll(localAvail);
+                    isInitialized = true;
+                    this.availComputed = true;
+                } else if (isInitialized) {
+                    if (parent.availComputed) {
+                        this.availSet.retainAll(localAvail);
                     }
-                    localAvail.clear();
+                }
+                localAvail.clear();
 
             }
 
