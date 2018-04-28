@@ -18,9 +18,11 @@ public class Main {
 
     public static void main(String[] args) {
         if (args.length == 0) {
-            System.err.println("Specify .tgr file");
-            System.exit(1);
+            usage();
         } else {
+            if (args.length == 1 && Arrays.asList(args).contains("--help")) {
+                usage();
+            }
             try {
                 if (Arrays.asList(args).contains("--tokens")) {
                     runScanner(args[0]);
@@ -34,10 +36,10 @@ public class Main {
                 tree.revertLeftFactoring();
                 tree.revertLeftRecursion();
 
-                if (!Arrays.asList(args).contains("--no-type-check")) {
+                if (Arrays.asList(args).contains("--type-check")) {
                     TypeChecker checker = new TypeChecker(tree.getRoot());
-                    boolean isWellType = checker.isWellTyped();
-                    if (!isWellType) {
+                    boolean isWellTyped = checker.isWellTyped();
+                    if (!isWellTyped) {
                         System.err.println("Type Check Error in " + args[0]);
                         System.exit(1);
                     }
@@ -57,6 +59,13 @@ public class Main {
 
     }
 
+    private static void usage() {
+        System.err.println("Specify .tgr file\n" +
+                "[--tokens] to print tokens and any lexer errors\n" +
+                "[--ast] to print out AST and any parser errors\n" +
+                "[--type-check] to type check and output any type errors");
+        System.exit(1);
+    }
     private static void runScanner(String filename) throws FileNotFoundException {
         Reader reader = new FileReader(new File(filename));
         TigerScanner sc = new TigerScanner(reader);

@@ -134,7 +134,6 @@ public class CFG {
                         TigerParser.parse(incrementList.iterator(), incrementAst, new TigerNT("stmt"));
 
                         CFGNode assign = new CFGNode(assignAst.getRoot());
-                        assign.isUseful = true;
                         CFGNode decrement = new CFGNode(decrementAst.getRoot());
                         assign.connectNode(decrement);
                         CFGNode expr = new CFGNode(exprAst.getRoot());

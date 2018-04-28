@@ -32,7 +32,7 @@ let
         return b;
     end;
 in
-    b := 5; /* check for dead code */
+    b := 5;
 
     c := twicef(b); /* check for NOT dead code */
     b := a;
